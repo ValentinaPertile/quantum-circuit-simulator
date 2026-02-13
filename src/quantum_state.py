@@ -43,9 +43,9 @@ class QuantumState:
         Returns:
             State vector
         """
-        # TODO: Implementa esta función
-        # Pista: convierte el string binario a un índice decimal
-        # y crea un vector con 1.0 en esa posición
+        # TODO: Implement this function
+        # Hint: Convert the binary string to a decimal index
+        # and create a vector with 1.0 at that position
         index = int(binary_string, 2)
         state = np.zeros(self.dim, dtype=complex)
         state[index] = 1.0
@@ -69,10 +69,10 @@ class QuantumState:
             outcome = format(outcome_index, f'0{self.num_qubits}b')
             return outcome, probabilities[outcome_index]
         else:
-            # TODO (opcional): Implementa medición de un solo qubit
-            # Por ahora, solo medimos todo el sistema
+            # TODO (optional): Implement single qubit measurement
+            # For now, we only measure the entire system
             raise NotImplementedError("Single qubit measurement not yet implemented")
-    
+   
     def get_amplitudes(self) -> dict:
         """
         Get all non-zero amplitudes in the state.
@@ -101,8 +101,6 @@ class QuantumState:
         return " + ".join(terms)
 
 
-# TODO: Tu tarea
-# Crea una función que verifique si un estado está normalizado
 def is_normalized(state: QuantumState, tolerance: float = 1e-10) -> bool:
     """
     Check if a quantum state is normalized.
@@ -114,5 +112,6 @@ def is_normalized(state: QuantumState, tolerance: float = 1e-10) -> bool:
     Returns:
         True if normalized, False otherwise
     """
-    # Pista: la suma de |amplitud|² debe ser 1
-    pass  # Reemplaza esto con tu código
+
+    total_prob = np.sum(np.abs(state.state_vector) ** 2)
+    return abs(total_prob - 1.0) < tolerance
