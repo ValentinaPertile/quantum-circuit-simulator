@@ -4,222 +4,155 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quantum Circuit Simulator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background: #0f172a;
-        }
-        
-        .quantum-gradient {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        }
-        
-        .gate-button {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .gate-button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .gate-button:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .probability-bar {
-            transition: width 0.5s ease-out;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-        }
-        
-        .operation-chip {
-            display: inline-block;
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-<body class="text-gray-100">
-    <div class="min-h-screen p-6">
+<body>
+    <div class="container">
         <!-- Header -->
-        <header class="max-w-7xl mx-auto mb-8">
-            <div class="flex items-center justify-between">
+        <header class="header">
+            <div class="header-title">
+                <h1>Quantum Circuit Simulator</h1>
                 <div>
-                    <h1 class="text-4xl font-bold text-white mb-2">
-                        <i class="fas fa-atom text-blue-400"></i>
-                        Quantum Circuit Simulator
-                    </h1>
-                    <p class="text-gray-400">Build and simulate quantum circuits in your browser</p>
+                    <div class="header-subtitle">Build and simulate quantum circuits</div>
+                    <div class="header-subtitle" style="font-size: 0.85rem; opacity: 0.7;">Activity 5.4.3 Project</div>
                 </div>
-                <div class="text-right">
-                    <p class="text-sm text-gray-500">Activity 5.4.3 Project</p>
-                    <p class="text-xs text-gray-600">Python Backend + JavaScript Frontend</p>
-                </div>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span> Toggle Theme
+                </button>
             </div>
         </header>
 
-        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Column: Circuit Builder -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Qubit Configuration -->
-                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-sliders-h mr-2 text-blue-400"></i>
-                        Configuration
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Column 1: Configuration & Gates -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <!-- Configuration Card -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <span></span> Configuration
                     </h2>
-                    <div class="flex items-center space-x-4">
-                        <label class="text-sm text-gray-400">Number of Qubits:</label>
-                        <input 
-                            type="number" 
-                            id="numQubits" 
-                            min="1" 
-                            max="3" 
-                            value="2"
-                            class="bg-slate-700 text-white px-4 py-2 rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
-                        >
+                    <div class="config-row">
+                        <label class="config-label">Number of Qubits:</label>
+                        <input type="number" id="numQubits" class="config-input" min="1" max="3" value="2">
                     </div>
                 </div>
 
-                <!-- Gate Selection -->
-                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-layer-group mr-2 text-purple-400"></i>
-                        Quantum Gates
+                <!-- Gates Card -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <span></span> Quantum Gates
                     </h2>
-                    <div class="grid grid-cols-5 gap-3">
-                        <button onclick="addGate('H')" class="gate-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition">
-                            H
-                        </button>
-                        <button onclick="addGate('X')" class="gate-button bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg transition">
-                            X
-                        </button>
-                        <button onclick="addGate('Y')" class="gate-button bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg transition">
-                            Y
-                        </button>
-                        <button onclick="addGate('Z')" class="gate-button bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 rounded-lg transition">
-                            Z
-                        </button>
-                        <button onclick="addGate('CNOT')" class="gate-button bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-lg transition">
-                            CNOT
-                        </button>
+                    <div class="gates-grid">
+                        <button class="gate-btn h" onclick="addGate('H')">H</button>
+                        <button class="gate-btn x" onclick="addGate('X')">X</button>
+                        <button class="gate-btn y" onclick="addGate('Y')">Y</button>
+                        <button class="gate-btn z" onclick="addGate('Z')">Z</button>
+                        <button class="gate-btn cnot" onclick="addGate('CNOT')">CNOT</button>
                     </div>
 
-                    <!-- Gate Configuration (Hidden by default) -->
-                    <div id="gateConfig" class="mt-4 p-4 bg-slate-700 rounded-lg hidden">
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-1">Target Qubit</label>
-                                <select id="targetQubit" class="w-full bg-slate-600 text-white px-3 py-2 rounded border border-slate-500">
-                                </select>
-                            </div>
-                            <div id="controlQubitDiv" class="hidden">
-                                <label class="block text-sm text-gray-400 mb-1">Control Qubit</label>
-                                <select id="controlQubit" class="w-full bg-slate-600 text-white px-3 py-2 rounded border border-slate-500">
-                                </select>
-                            </div>
-                            <button onclick="confirmGate()" class="w-full quantum-gradient text-white font-semibold py-2 rounded-lg hover:opacity-90 transition">
-                                <i class="fas fa-plus-circle mr-2"></i>Add to Circuit
-                            </button>
+                    <!-- Gate Configuration -->
+                    <div id="gateConfig" class="gate-config hidden">
+                        <div class="input-group">
+                            <label class="input-label">Target Qubit</label>
+                            <select id="targetQubit" class="input-select"></select>
                         </div>
+                        <div id="controlQubitDiv" class="input-group hidden">
+                            <label class="input-label">Control Qubit</label>
+                            <select id="controlQubit" class="input-select"></select>
+                        </div>
+                        <button class="btn btn-primary btn-block" onclick="confirmGate()">
+                             Add to Circuit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Presets Card -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <span></span> Quick Start
+                    </h2>
+                    <div class="presets-grid">
+                        <button class="btn btn-secondary" onclick="loadBellState()">
+                             Bell State
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadExample()">
+                             Activity 5.4.3
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Circuit Visualization & Operations -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <!-- Circuit Visualization -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <span></span> Circuit Diagram
+                    </h2>
+                    <div class="circuit-display">
+                        <div id="circuitCanvas"></div>
                     </div>
                 </div>
 
                 <!-- Operations List -->
-                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-semibold flex items-center">
-                            <i class="fas fa-list mr-2 text-green-400"></i>
-                            Circuit Operations
+                <div class="card">
+                    <div class="operations-header">
+                        <h2 class="card-title" style="margin-bottom: 0;">
+                            <span></span> Operations
                         </h2>
-                        <button onclick="clearCircuit()" class="text-sm text-red-400 hover:text-red-300 transition">
-                            <i class="fas fa-trash mr-1"></i>Clear All
+                        <button class="btn btn-clear" onclick="clearCircuit()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                            🗑️ Clear
                         </button>
                     </div>
-                    <div id="operationsList" class="space-y-2 min-h-[100px]">
-                        <p class="text-gray-500 text-center py-8">No operations yet</p>
+                    <div id="operationsList" class="operations-list">
+                        <div class="circuit-empty">No operations yet</div>
                     </div>
-                    <button onclick="simulate()" class="w-full mt-4 quantum-gradient text-white font-bold py-3 rounded-lg hover:opacity-90 transition text-lg">
-                        <i class="fas fa-play-circle mr-2"></i>Run Simulation
+                    <button class="btn btn-primary btn-block" onclick="simulate()">
+                         Run Simulation
                     </button>
-                </div>
-
-                <!-- Presets -->
-                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-magic mr-2 text-yellow-400"></i>
-                        Quick Start
-                    </h2>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="loadBellState()" class="bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition">
-                            <i class="fas fa-link mr-2"></i>Bell State
-                        </button>
-                        <button onclick="loadExample()" class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition">
-                            <i class="fas fa-flask mr-2"></i>Activity 5.4.3
-                        </button>
-                    </div>
                 </div>
             </div>
 
-            <!-- Right Column: Results -->
-            <div class="space-y-6">
+            <!-- Column 3: Results -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 <!-- Quantum State -->
-                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-wave-square mr-2 text-cyan-400"></i>
-                        Quantum State
+                <div class="card">
+                    <h2 class="card-title">
+                        <span></span> Quantum State
                     </h2>
                     <div id="amplitudesDisplay">
-                        <p class="text-gray-500 text-center py-8">Run simulation to see results</p>
+                        <div class="circuit-empty">Run simulation to see results</div>
                     </div>
                 </div>
 
                 <!-- Entanglement Analysis -->
-                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center">
-                        <i class="fas fa-project-diagram mr-2 text-pink-400"></i>
-                        Entanglement
+                <div class="card">
+                    <h2 class="card-title">
+                        <span></span> Entanglement
                     </h2>
                     <div id="entanglementDisplay">
-                        <p class="text-gray-500 text-center py-4">Available for 2-qubit systems</p>
+                        <div class="text-center text-muted">
+                            <p>Available for 2-qubit systems</p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Info Card -->
-                <div class="bg-gradient-to-br from-blue-900 to-purple-900 rounded-lg shadow-xl p-6 border border-blue-700">
-                    <h3 class="font-semibold mb-2 flex items-center">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        About This Project
-                    </h3>
-                    <p class="text-sm text-gray-300">
-                        Interactive quantum circuit simulator built with Python and JavaScript. 
-                        Create circuits, analyze entanglement, and visualize quantum states.
+                <div class="info-card">
+                    <h3>About</h3>
+                    <p>
+                        Interactive quantum circuit simulator with real-time visualization. 
+                        Supports up to 3 qubits with entanglement analysis and state visualization.
                     </p>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="circuit-visualizer.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

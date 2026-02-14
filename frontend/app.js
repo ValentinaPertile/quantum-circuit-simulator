@@ -1,8 +1,34 @@
 const API_URL = 'http://127.0.0.1:5000/api';
 let operations = [];
 let currentGate = null;
+let visualizer;
 
-// Initialize qubit selectors
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    visualizer = new CircuitVisualizer('circuitCanvas');
+    updateQubitSelectors();
+    loadTheme();
+});
+
+// Theme toggle
+function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+}
+
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+}
+
+// Qubit selectors
 function updateQubitSelectors() {
     const numQubits = parseInt(document.getElementById('numQubits').value);
     const targetSelect = document.getElementById('targetQubit');
@@ -17,25 +43,26 @@ function updateQubitSelectors() {
     }
 }
 
-document.getElementById('numQubits').addEventListener('change', updateQubitSelectors);
-updateQubitSelectors();
+document.getElementById('numQubits').addEventListener('change', () => {
+    updateQubitSelectors();
+    updateCircuitVisualization();
+});
 
-// Add gate
+// Gate operations
 function addGate(gateName) {
     currentGate = gateName;
     const config = document.getElementById('gateConfig');
     const controlDiv = document.getElementById('controlQubitDiv');
     
-    config.style.display = 'block';
+    config.classList.remove('hidden');
     
     if (gateName === 'CNOT') {
-        controlDiv.style.display = 'block';
+        controlDiv.classList.remove('hidden');
     } else {
-        controlDiv.style.display = 'none';
+        controlDiv.classList.add('hidden');
     }
 }
 
-// Confirm gate addition
 function confirmGate() {
     const target = parseInt(document.getElementById('targetQubit').value);
     const control = parseInt(document.getElementById('controlQubit').value);
@@ -61,47 +88,40 @@ function confirmGate() {
     
     operations.push(operation);
     updateOperationsList();
-    document.getElementById('gateConfig').style.display = 'none';
+    updateCircuitVisualization();
+    document.getElementById('gateConfig').classList.add('hidden');
 }
 
-// Update operations list display
 function updateOperationsList() {
     const list = document.getElementById('operationsList');
     
     if (operations.length === 0) {
-        list.innerHTML = '<p class="text-gray-500 text-center py-8">No operations yet</p>';
+        list.innerHTML = '<div class="circuit-empty">No operations yet</div>';
         return;
     }
     
     list.innerHTML = operations.map((op, idx) => {
-        let gateColor = 'bg-blue-600';
-        if (op.gate === 'x') gateColor = 'bg-red-600';
-        if (op.gate === 'y') gateColor = 'bg-green-600';
-        if (op.gate === 'z') gateColor = 'bg-yellow-600';
-        if (op.gate === 'cnot') gateColor = 'bg-purple-600';
+        const gateName = op.gate.toUpperCase();
+        const gateClass = op.gate;
         
         if (op.gate === 'cnot') {
             return `
-                <div class="operation-chip bg-slate-700 p-3 rounded-lg border border-slate-600 flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="${gateColor} px-3 py-1 rounded text-sm font-bold">CNOT</span>
-                        <span class="text-gray-400 text-sm">control: q${op.control} → target: q${op.target}</span>
+                <div class="operation-item">
+                    <div class="operation-info">
+                        <span class="operation-badge ${gateClass}">${gateName}</span>
+                        <span class="operation-details">control: q${op.control} → target: q${op.target}</span>
                     </div>
-                    <button onclick="removeOperation(${idx})" class="text-red-400 hover:text-red-300">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <button class="operation-remove" onclick="removeOperation(${idx})">✕</button>
                 </div>
             `;
         } else {
             return `
-                <div class="operation-chip bg-slate-700 p-3 rounded-lg border border-slate-600 flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="${gateColor} px-3 py-1 rounded text-sm font-bold">${op.gate.toUpperCase()}</span>
-                        <span class="text-gray-400 text-sm">qubit ${op.target}</span>
+                <div class="operation-item">
+                    <div class="operation-info">
+                        <span class="operation-badge ${gateClass}">${gateName}</span>
+                        <span class="operation-details">qubit ${op.target}</span>
                     </div>
-                    <button onclick="removeOperation(${idx})" class="text-red-400 hover:text-red-300">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <button class="operation-remove" onclick="removeOperation(${idx})">✕</button>
                 </div>
             `;
         }
@@ -111,9 +131,15 @@ function updateOperationsList() {
 function removeOperation(idx) {
     operations.splice(idx, 1);
     updateOperationsList();
+    updateCircuitVisualization();
 }
 
-// Simulate circuit
+function updateCircuitVisualization() {
+    const numQubits = parseInt(document.getElementById('numQubits').value);
+    visualizer.draw(numQubits, operations);
+}
+
+// Simulation
 async function simulate() {
     const numQubits = parseInt(document.getElementById('numQubits').value);
     
@@ -147,30 +173,28 @@ async function simulate() {
     }
 }
 
-// Display results
 function displayResults(data) {
     const amplitudesDiv = document.getElementById('amplitudesDisplay');
     const entanglementDiv = document.getElementById('entanglementDisplay');
     
     // Display amplitudes
-    let html = '<div class="space-y-3">';
+    let html = '';
     for (const [state, amp] of Object.entries(data.amplitudes)) {
         const prob = amp.probability;
         const percentage = (prob * 100).toFixed(1);
         
         html += `
-            <div>
-                <div class="flex justify-between mb-1">
-                    <span class="font-mono font-bold">|${state}⟩</span>
-                    <span class="text-gray-400">${percentage}%</span>
+            <div class="amplitude-item">
+                <div class="amplitude-header">
+                    <span class="amplitude-state">|${state}⟩</span>
+                    <span class="amplitude-probability">${percentage}%</span>
                 </div>
-                <div class="bg-slate-700 rounded-full h-3 overflow-hidden">
-                    <div class="probability-bar h-full rounded-full" style="width: ${percentage}%"></div>
+                <div class="amplitude-bar-container">
+                    <div class="amplitude-bar" style="width: ${percentage}%"></div>
                 </div>
             </div>
         `;
     }
-    html += '</div>';
     amplitudesDiv.innerHTML = html;
     
     // Display entanglement
@@ -179,34 +203,30 @@ function displayResults(data) {
         const isEntangled = ent.is_entangled;
         
         entanglementDiv.innerHTML = `
-            <div class="space-y-3">
-                <div class="p-3 rounded-lg ${isEntangled ? 'bg-pink-900 border border-pink-700' : 'bg-green-900 border border-green-700'}">
-                    <p class="font-bold text-center text-lg">
-                        ${isEntangled ? '<i class="fas fa-link mr-2"></i>ENTANGLED' : '<i class="fas fa-unlink mr-2"></i>NOT ENTANGLED'}
-                    </p>
+            <div class="entanglement-status ${isEntangled ? 'entangled' : 'not-entangled'}">
+                ${isEntangled ? ' ENTANGLED' : ' NOT ENTANGLED'}
+            </div>
+            <div class="entanglement-metrics">
+                <div class="metric-row">
+                    <span class="metric-label">Classification:</span>
+                    <span class="metric-value">${ent.classification}</span>
                 </div>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Classification:</span>
-                        <span class="font-semibold">${ent.classification}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Concurrence:</span>
-                        <span class="font-mono">${ent.concurrence.toFixed(4)}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Entropy:</span>
-                        <span class="font-mono">${ent.entropy.toFixed(4)}</span>
-                    </div>
+                <div class="metric-row">
+                    <span class="metric-label">Concurrence:</span>
+                    <span class="metric-value">${ent.concurrence.toFixed(4)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Entropy:</span>
+                    <span class="metric-value">${ent.entropy.toFixed(4)}</span>
                 </div>
             </div>
         `;
     } else {
-        entanglementDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Available for 2-qubit systems</p>';
+        entanglementDiv.innerHTML = '<div class="text-center text-muted"><p>Available for 2-qubit systems</p></div>';
     }
 }
 
-// Load Bell state preset
+// Presets
 async function loadBellState() {
     try {
         const response = await fetch(`${API_URL}/presets/bell`);
@@ -220,6 +240,7 @@ async function loadBellState() {
             document.getElementById('numQubits').value = 2;
             updateQubitSelectors();
             updateOperationsList();
+            updateCircuitVisualization();
             displayResults(data);
         }
     } catch (error) {
@@ -228,7 +249,6 @@ async function loadBellState() {
     }
 }
 
-// Load Activity 5.4.3 example
 function loadExample() {
     operations = [
         { gate: 'h', target: 0 },
@@ -239,13 +259,14 @@ function loadExample() {
     document.getElementById('numQubits').value = 2;
     updateQubitSelectors();
     updateOperationsList();
+    updateCircuitVisualization();
     alert('Loaded circuit from Activity 5.4.3! Click "Run Simulation" to execute.');
 }
 
-// Clear circuit
 function clearCircuit() {
     operations = [];
     updateOperationsList();
-    document.getElementById('amplitudesDisplay').innerHTML = '<p class="text-gray-500 text-center py-8">Run simulation to see results</p>';
-    document.getElementById('entanglementDisplay').innerHTML = '<p class="text-gray-500 text-center py-4">Available for 2-qubit systems</p>';
+    updateCircuitVisualization();
+    document.getElementById('amplitudesDisplay').innerHTML = '<div class="circuit-empty">Run simulation to see results</div>';
+    document.getElementById('entanglementDisplay').innerHTML = '<div class="text-center text-muted"><p>Available for 2-qubit systems</p></div>';
 }
