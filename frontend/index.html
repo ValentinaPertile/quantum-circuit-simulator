@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Circuit Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #0f172a;
+        }
+        
+        .quantum-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+        
+        .gate-button {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gate-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .gate-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .probability-bar {
+            transition: width 0.5s ease-out;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+        
+        .operation-chip {
+            display: inline-block;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <div class="min-h-screen p-6">
+        <!-- Header -->
+        <header class="max-w-7xl mx-auto mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">
+                        <i class="fas fa-atom text-blue-400"></i>
+                        Quantum Circuit Simulator
+                    </h1>
+                    <p class="text-gray-400">Build and simulate quantum circuits in your browser</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Activity 5.4.3 Project</p>
+                    <p class="text-xs text-gray-600">Python Backend + JavaScript Frontend</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Circuit Builder -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Qubit Configuration -->
+                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-sliders-h mr-2 text-blue-400"></i>
+                        Configuration
+                    </h2>
+                    <div class="flex items-center space-x-4">
+                        <label class="text-sm text-gray-400">Number of Qubits:</label>
+                        <input 
+                            type="number" 
+                            id="numQubits" 
+                            min="1" 
+                            max="3" 
+                            value="2"
+                            class="bg-slate-700 text-white px-4 py-2 rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
+                        >
+                    </div>
+                </div>
+
+                <!-- Gate Selection -->
+                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-layer-group mr-2 text-purple-400"></i>
+                        Quantum Gates
+                    </h2>
+                    <div class="grid grid-cols-5 gap-3">
+                        <button onclick="addGate('H')" class="gate-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition">
+                            H
+                        </button>
+                        <button onclick="addGate('X')" class="gate-button bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg transition">
+                            X
+                        </button>
+                        <button onclick="addGate('Y')" class="gate-button bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg transition">
+                            Y
+                        </button>
+                        <button onclick="addGate('Z')" class="gate-button bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 rounded-lg transition">
+                            Z
+                        </button>
+                        <button onclick="addGate('CNOT')" class="gate-button bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-lg transition">
+                            CNOT
+                        </button>
+                    </div>
+
+                    <!-- Gate Configuration (Hidden by default) -->
+                    <div id="gateConfig" class="mt-4 p-4 bg-slate-700 rounded-lg hidden">
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">Target Qubit</label>
+                                <select id="targetQubit" class="w-full bg-slate-600 text-white px-3 py-2 rounded border border-slate-500">
+                                </select>
+                            </div>
+                            <div id="controlQubitDiv" class="hidden">
+                                <label class="block text-sm text-gray-400 mb-1">Control Qubit</label>
+                                <select id="controlQubit" class="w-full bg-slate-600 text-white px-3 py-2 rounded border border-slate-500">
+                                </select>
+                            </div>
+                            <button onclick="confirmGate()" class="w-full quantum-gradient text-white font-semibold py-2 rounded-lg hover:opacity-90 transition">
+                                <i class="fas fa-plus-circle mr-2"></i>Add to Circuit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operations List -->
+                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold flex items-center">
+                            <i class="fas fa-list mr-2 text-green-400"></i>
+                            Circuit Operations
+                        </h2>
+                        <button onclick="clearCircuit()" class="text-sm text-red-400 hover:text-red-300 transition">
+                            <i class="fas fa-trash mr-1"></i>Clear All
+                        </button>
+                    </div>
+                    <div id="operationsList" class="space-y-2 min-h-[100px]">
+                        <p class="text-gray-500 text-center py-8">No operations yet</p>
+                    </div>
+                    <button onclick="simulate()" class="w-full mt-4 quantum-gradient text-white font-bold py-3 rounded-lg hover:opacity-90 transition text-lg">
+                        <i class="fas fa-play-circle mr-2"></i>Run Simulation
+                    </button>
+                </div>
+
+                <!-- Presets -->
+                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-magic mr-2 text-yellow-400"></i>
+                        Quick Start
+                    </h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="loadBellState()" class="bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition">
+                            <i class="fas fa-link mr-2"></i>Bell State
+                        </button>
+                        <button onclick="loadExample()" class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition">
+                            <i class="fas fa-flask mr-2"></i>Activity 5.4.3
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results -->
+            <div class="space-y-6">
+                <!-- Quantum State -->
+                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-wave-square mr-2 text-cyan-400"></i>
+                        Quantum State
+                    </h2>
+                    <div id="amplitudesDisplay">
+                        <p class="text-gray-500 text-center py-8">Run simulation to see results</p>
+                    </div>
+                </div>
+
+                <!-- Entanglement Analysis -->
+                <div class="bg-slate-800 rounded-lg shadow-xl p-6 border border-slate-700">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-project-diagram mr-2 text-pink-400"></i>
+                        Entanglement
+                    </h2>
+                    <div id="entanglementDisplay">
+                        <p class="text-gray-500 text-center py-4">Available for 2-qubit systems</p>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="bg-gradient-to-br from-blue-900 to-purple-900 rounded-lg shadow-xl p-6 border border-blue-700">
+                    <h3 class="font-semibold mb-2 flex items-center">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        About This Project
+                    </h3>
+                    <p class="text-sm text-gray-300">
+                        Interactive quantum circuit simulator built with Python and JavaScript. 
+                        Create circuits, analyze entanglement, and visualize quantum states.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
