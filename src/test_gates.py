@@ -14,6 +14,7 @@ print("After applying H:", state)
 print()
 
 # Test 2: CNOT on |00⟩
+
 print("=== Test 2: CNOT on |00⟩ ===")
 state2 = QuantumState(2)
 print("Before:", state2)
