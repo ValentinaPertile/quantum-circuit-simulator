@@ -1,5 +1,5 @@
-from quantum_state import QuantumState
-from gates import hadamard, pauli_x, cnot, apply_single_qubit_gate, apply_two_qubit_gate
+from src.quantum_state import QuantumState
+from src.gates import hadamard, pauli_x, cnot, apply_single_qubit_gate, apply_two_qubit_gate
 
 # Test 1: Hadamard on |0⟩
 print("=== Test 1: Hadamard ===")

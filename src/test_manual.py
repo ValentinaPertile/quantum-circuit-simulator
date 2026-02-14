@@ -1,4 +1,4 @@
-from quantum_state import QuantumState, is_normalized
+from src.quantum_state import QuantumState, is_normalized
 
 # Create|00⟩
 state = QuantumState(2)
