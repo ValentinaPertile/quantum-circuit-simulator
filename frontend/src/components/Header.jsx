@@ -14,7 +14,7 @@ function Header({ theme, onToggleTheme, onBackToHome }) {
       </div>
       <div className="header-controls">
         <button className="theme-toggle" onClick={onToggleTheme}>
-          <span>{theme === 'dark' ? 'Sun' : 'Moon'}</span> Toggle Theme
+          <span>☾/☀︎</span>
         </button>
         <button className="btn btn-secondary" onClick={onBackToHome}>
           Back to Home
