@@ -56,7 +56,7 @@ class QuantumState:
         Simulate measurement of the quantum state.
         
         Args:
-            qubit_index: If None, measures all qubits
+            qubit_index: If None, measures all qubits. Otherwise measures specific qubit.
             
         Returns:
             Tuple of (outcome, probability)
@@ -69,10 +69,33 @@ class QuantumState:
             outcome = format(outcome_index, f'0{self.num_qubits}b')
             return outcome, probabilities[outcome_index]
         else:
-            # TODO (optional): Implement single qubit measurement
-            # For now, we only measure the entire system
-            raise NotImplementedError("Single qubit measurement not yet implemented")
-   
+            # Measure single qubit
+            # Sum probabilities for qubit being |0⟩ or |1⟩
+            prob_0 = 0.0
+            prob_1 = 0.0
+            
+            for i in range(self.dim):
+                bit_value = (i >> qubit_index) & 1
+                if bit_value == 0:
+                    prob_0 += probabilities[i]
+                else:
+                    prob_1 += probabilities[i]
+            
+            # Random measurement outcome
+            outcome_bit = 1 if np.random.random() < prob_1 else 0
+            outcome_prob = prob_1 if outcome_bit == 1 else prob_0
+            
+            # Collapse the state
+            new_state = np.zeros_like(self.state_vector)
+            for i in range(self.dim):
+                bit_value = (i >> qubit_index) & 1
+                if bit_value == outcome_bit:
+                    new_state[i] = self.state_vector[i] / np.sqrt(outcome_prob)
+            
+            self.state_vector = new_state
+            
+            return str(outcome_bit), outcome_prob
+        
     def get_amplitudes(self) -> dict:
         """
         Get all non-zero amplitudes in the state.

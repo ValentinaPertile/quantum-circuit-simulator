@@ -89,6 +89,28 @@ class QuantumCircuit:
     def cx(self, control: int, target: int):
         """Alias for CNOT gate."""
         return self.cnot(control, target)
+
+    def measure_qubit(self, target: int):
+        """
+        Measure a specific qubit (collapses that qubit's state).
+        
+        Args:
+            target: Qubit to measure
+            
+        Returns:
+            Measurement outcome (0 or 1)
+        """
+        outcome, prob = self.state.measure(qubit_index=target)
+        
+        # Record the measurement operation
+        self.operations.append({
+            'gate': 'MEASURE',
+            'qubits': [target],
+            'type': 'measurement',
+            'outcome': outcome
+        })
+        
+        return outcome   
     
     # Measurement and analysis
     

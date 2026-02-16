@@ -116,6 +116,9 @@ class QuantumAPIHandler(BaseHTTPRequestHandler):
                         circuit.z(op['target'])
                     elif gate == 'cnot' or gate == 'cx':
                         circuit.cnot(op['control'], op['target'])
+                    elif gate == 'measure':
+                        outcome = circuit.measure_qubit(op['target'])
+                        print(f"Measured qubit {op['target']}: outcome = {outcome}")
                 
                 amplitudes = circuit.get_amplitudes()
                 
