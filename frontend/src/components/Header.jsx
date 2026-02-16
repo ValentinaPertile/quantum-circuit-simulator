@@ -7,9 +7,6 @@ function Header({ theme, onToggleTheme, onBackToHome }) {
         <h1>Quantum Circuit Simulator</h1>
         <div>
           <div className="header-subtitle">Build and simulate quantum circuits</div>
-          <div className="header-subtitle" style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-            Activity 5.4.3 Project
-          </div>
         </div>
       </div>
       <div className="header-controls">
