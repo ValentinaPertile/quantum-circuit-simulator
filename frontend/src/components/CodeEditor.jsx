@@ -3,7 +3,7 @@ import { generatePythonCode, generateQiskitCode } from '../utils/codeGenerator'
 
 function CodeEditor({ operations, numQubits }) {
   const [format, setFormat] = useState('python')
-  const [code, setCode] = useState('')
+    const [code, setCode] = useState('')
   const [isEditable, setIsEditable] = useState(false)
 
   useEffect(() => {

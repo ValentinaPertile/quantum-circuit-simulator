@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const GATES = ['H', 'X', 'Y', 'Z', 'CNOT', 'MEASURE']
+const GATES = ['X', 'Y', 'Z', 'H', 'CNOT', 'MEASURE']
 
 function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPreset }) {
   const [selectedGate, setSelectedGate] = useState(null)
@@ -36,6 +36,11 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
     setSelectedGate(null)
   }
 
+  const getGateLabel = (gate) => {
+    if (gate === 'MEASURE') return 'Measurement'
+    return gate
+  }
+
   return (
     <>
       <div className="card">
@@ -62,7 +67,7 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
               className={`gate-btn ${gate.toLowerCase()}`}
               onClick={() => handleGateClick(gate)}
             >
-              {gate === 'MEASURE' ? 'M' : gate}
+              {getGateLabel(gate)}
             </button>
           ))}
         </div>

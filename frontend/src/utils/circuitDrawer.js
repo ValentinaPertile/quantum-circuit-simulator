@@ -31,7 +31,12 @@ export function drawCircuit(svgElement, numQubits, operations) {
 
 function drawSingleGate(svg, x, startY, gateName, qubit, qubitSpacing, gateWidth) {
   const y = startY + qubit * qubitSpacing
-  const gateColors = { h: '#6b7f5f', x: '#8a9d7d', y: '#556349', z: '#9db08e' }
+  const gateColors = {
+    h: '#6b7f5f',
+    x: '#8a9d7d',
+    y: '#556349',
+    z: '#9db08e'
+  }
   svg.append('rect').attr('x', x - gateWidth / 2).attr('y', y - 25).attr('width', gateWidth).attr('height', 50).attr('rx', 5).attr('fill', gateColors[gateName] || '#6b7f5f').attr('stroke', '#556349').attr('stroke-width', 2)
   svg.append('text').attr('x', x).attr('y', y + 5).attr('text-anchor', 'middle').attr('fill', 'white').attr('font-size', '18px').attr('font-weight', 'bold').attr('font-family', 'Georgia').text(gateName.toUpperCase())
 }

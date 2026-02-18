@@ -1,106 +1,86 @@
-import React, { useState, useEffect } from 'react'
-import { generatePythonCode, generateQiskitCode } from '../utils/codeGenerator'
+import React from 'react'
 
-function CodeEditor({ operations, numQubits }) {
-  const [format, setFormat] = useState('python')
-  const [code, setCode] = useState('')
-  const [isEditable, setIsEditable] = useState(false)
-
-  useEffect(() => {
-    if (format === 'python') {
-      setCode(generatePythonCode(operations, numQubits))
-    } else if (format === 'qiskit') {
-      setCode(generateQiskitCode(operations, numQubits))
-    }
-  }, [format, operations, numQubits])
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code).then(() => {
-      alert('Code copied to clipboard!')
-    }).catch(err => {
-      console.error('Failed to copy:', err)
-    })
+function Results({ results, numQubits }) {
+  if (!results || !results.success) {
+    return (
+      <>
+        <div className="card">
+          <h2 className="card-title">Quantum State</h2>
+          <div className="circuit-empty">Run simulation to see results</div>
+        </div>
+        <div className="card">
+          <h2 className="card-title">Entanglement</h2>
+          <div className="circuit-empty">Available for 2-qubit systems</div>
+        </div>
+      </>
+    )
   }
 
-  const handleDownload = () => {
-    const extension = format === 'python' ? 'py' : 'py'
-    const blob = new Blob([code], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `quantum_circuit.${extension}`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const highlightSyntax = (text) => {
-    return text
-      .replace(/#.*/g, '<span class="code-comment">$&</span>')
-      .replace(/\b(from|import|def|class|if|else|for|while|return|print)\b/g, '<span class="code-keyword">$&</span>')
-      .replace(/(['"].*?['"])/g, '<span class="code-string">$&</span>')
-      .replace(/\b(\d+)\b/g, '<span class="code-number">$&</span>')
-      .replace(/(\w+)\(/g, '<span class="code-function">$1</span>(')
-  }
+  const { amplitudes, entanglement } = results
 
   return (
-    <div className="code-page">
-      <div className="code-editor-container">
-        <div className="code-toolbar">
-          <div className="code-toolbar-title">
-            {format === 'python' ? 'Python Code' : 'Qiskit Code'}
-          </div>
-          <div className="code-toolbar-actions">
-            <select 
-              className="export-format"
-              value={format}
-              onChange={(e) => setFormat(e.target.value)}
-            >
-              <option value="python">Python (NumPy)</option>
-              <option value="qiskit">Qiskit (IBM)</option>
-            </select>
-            <button className="btn btn-secondary" onClick={() => setIsEditable(!isEditable)}>
-              {isEditable ? 'View Mode' : 'Edit Mode'}
-            </button>
-            <button className="btn btn-secondary" onClick={handleCopy}>
-              Copy
-            </button>
-            <button className="btn btn-primary" onClick={handleDownload}>
-              Download
-            </button>
-          </div>
-        </div>
-        
-        <div className="code-editor">
-          {isEditable ? (
-            <textarea 
-              className="code-editable"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              spellCheck="false"
-            />
-          ) : (
-            <pre 
-              className="python-code"
-              dangerouslySetInnerHTML={{ __html: highlightSyntax(code) }}
-            />
-          )}
+    <>
+      <div className="card">
+        <h2 className="card-title">Quantum State</h2>
+        <div>
+          {Object.entries(amplitudes).map(([state, amp]) => (
+            <AmplitudeBar key={state} state={state} probability={amp.probability} />
+          ))}
         </div>
       </div>
 
-      {format === 'qiskit' && (
-        <div className="card" style={{ marginTop: '1.5rem' }}>
-          <h3 className="card-title">About Qiskit Export</h3>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            <strong>Qiskit</strong> is IBM's open-source quantum computing framework. 
-            The exported code can be run on IBM's quantum simulators or real quantum hardware through IBM Quantum Experience.
-          </p>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', marginTop: '1rem' }}>
-            To use this code, install Qiskit: <code style={{ background: 'var(--beige-200)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>pip install qiskit</code>
-          </p>
-        </div>
-      )}
+      <div className="card">
+        <h2 className="card-title">Entanglement</h2>
+        {entanglement && numQubits === 2 ? (
+          <EntanglementInfo data={entanglement} />
+        ) : (
+          <div className="circuit-empty">Available for 2-qubit systems</div>
+        )}
+      </div>
+    </>
+  )
+}
+
+function AmplitudeBar({ state, probability }) {
+  const percentage = (probability * 100).toFixed(1)
+
+  return (
+    <div className="amplitude-item">
+      <div className="amplitude-header">
+        <span className="amplitude-state">|{state}⟩</span>
+        <span className="amplitude-probability">{percentage}%</span>
+      </div>
+      <div className="amplitude-bar-container">
+        <div className="amplitude-bar" style={{ width: `${percentage}%` }}></div>
+      </div>
     </div>
   )
 }
 
-export default CodeEditor
+function EntanglementInfo({ data }) {
+  const { is_entangled, classification, concurrence, entropy } = data
+
+  return (
+    <>
+      <div className={`entanglement-status ${is_entangled ? 'entangled' : 'not-entangled'}`}>
+        {is_entangled ? 'ENTANGLED' : 'NOT ENTANGLED'}
+      </div>
+      <div className="entanglement-metrics">
+        <MetricRow label="Classification" value={classification} />
+        <MetricRow label="Concurrence" value={concurrence.toFixed(4)} />
+        <MetricRow label="Entropy" value={entropy.toFixed(4)} />
+      </div>
+    </>
+  )
+}
+
+function MetricRow({ label, value }) {
+  return (
+    <div className="metric-row">
+      <span class="metric-label">{label}:</span>
+      <span className="metric-value">{value}</span>
+    </div>
+  )
+}
+
+export default Results

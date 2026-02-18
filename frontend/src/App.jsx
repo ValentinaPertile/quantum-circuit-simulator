@@ -11,6 +11,7 @@ import './App.css'
 function App() {
   const [showLanding, setShowLanding] = useState(true)
   const [activeTab, setActiveTab] = useState('circuit')
+  const [showCodeTab, setShowCodeTab] = useState(false)  // NUEVO
   const [numQubits, setNumQubits] = useState(2)
   const [operations, setOperations] = useState([])
   const [results, setResults] = useState(null)
@@ -60,6 +61,11 @@ function App() {
     }
   }
 
+  const handleShowCode = () => {
+    setShowCodeTab(true)    // NUEVO
+    setActiveTab('code')    // NUEVO
+  }
+
   if (showLanding) {
     return <LandingPage onStart={() => setShowLanding(false)} />
   }
@@ -72,20 +78,23 @@ function App() {
         onBackToHome={() => setShowLanding(true)}
       />
 
-      <div className="nav-tabs">
-        <button 
-          className={`nav-tab ${activeTab === 'circuit' ? 'active' : ''}`}
-          onClick={() => setActiveTab('circuit')}
-        >
-          Circuit Builder
-        </button>
-        <button 
-          className={`nav-tab ${activeTab === 'code' ? 'active' : ''}`}
-          onClick={() => setActiveTab('code')}
-        >
-          Python & Qiskit Code
-        </button>
-      </div>
+      {/* SOLO MOSTRAR TABS SI showCodeTab ES TRUE */}
+      {showCodeTab && (
+        <div className="nav-tabs">
+          <button 
+            className={`nav-tab ${activeTab === 'circuit' ? 'active' : ''}`}
+            onClick={() => setActiveTab('circuit')}
+          >
+            Circuit Builder
+          </button>
+          <button 
+            className={`nav-tab ${activeTab === 'code' ? 'active' : ''}`}
+            onClick={() => setActiveTab('code')}
+          >
+            Python & Qiskit Code
+          </button>
+        </div>
+      )}
 
       {activeTab === 'circuit' ? (
         <div className="main-grid">
@@ -108,6 +117,7 @@ function App() {
               onRemove={removeOperation}
               onClear={clearCircuit}
               onSimulate={setResults}
+              onShowCode={handleShowCode}  // CAMBIADO
               numQubits={numQubits}
             />
           </div>

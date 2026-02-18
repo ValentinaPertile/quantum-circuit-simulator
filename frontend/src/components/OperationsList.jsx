@@ -1,7 +1,7 @@
 import React from 'react'
 import { simulateCircuit } from '../utils/api'
 
-function OperationsList({ operations, onRemove, onClear, onSimulate, numQubits }) {
+function OperationsList({ operations, onRemove, onClear, onSimulate, onShowCode, numQubits }) {
   const handleSimulate = async () => {
     if (operations.length === 0) {
       alert('Add some gates first!')
@@ -42,18 +42,26 @@ function OperationsList({ operations, onRemove, onClear, onSimulate, numQubits }
       <button className="btn btn-primary btn-block" onClick={handleSimulate}>
         Run Simulation
       </button>
+      <button 
+        className="btn btn-secondary btn-block" 
+        onClick={onShowCode}
+        style={{ marginTop: '0.8rem' }}
+      >
+        View Python Code
+      </button>
     </div>
   )
 }
 
 function OperationItem({ operation, index, onRemove }) {
   const { gate, target, control } = operation
-  const gateName = gate.toUpperCase()
+  let gateName = gate.toUpperCase()
 
   let details = ''
   if (gate === 'cnot') {
     details = `control: q${control} → target: q${target}`
   } else if (gate === 'measure') {
+    gateName = 'M'
     details = `measure qubit ${target}`
   } else {
     details = `qubit ${target}`
@@ -63,7 +71,7 @@ function OperationItem({ operation, index, onRemove }) {
     <div className="operation-item">
       <div className="operation-info">
         <span className="operation-badge">
-          {gate === 'measure' ? 'M' : gateName}
+          {gateName}
         </span>
         <span className="operation-details">{details}</span>
       </div>

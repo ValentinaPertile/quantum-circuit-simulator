@@ -333,6 +333,13 @@
     transform: translateY(-2px);
 }
 
+/* Measurement debe usar el ancho completo */
+.gate-btn.measurement {
+    grid-column: span 3;
+    font-size: 1rem;
+}
+
+
 /* ===== GATE CONFIG ===== */
 .gate-config {
     margin-top: 1.5rem;
