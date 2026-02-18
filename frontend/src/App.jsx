@@ -11,8 +11,9 @@ import './App.css'
 function App() {
   const [showLanding, setShowLanding] = useState(true)
   const [activeTab, setActiveTab] = useState('circuit')
-  const [showCodeTab, setShowCodeTab] = useState(false)  // NUEVO
+  const [showCodeTab, setShowCodeTab] = useState(false)
   const [numQubits, setNumQubits] = useState(2)
+  const [initialState, setInitialState] = useState('00')
   const [operations, setOperations] = useState([])
   const [results, setResults] = useState(null)
   const [theme, setTheme] = useState('light')
@@ -43,6 +44,11 @@ function App() {
     setResults(null)
   }
 
+  const handleNumQubitsChange = (newNumQubits) => {
+    setNumQubits(newNumQubits)
+    setInitialState('0'.repeat(newNumQubits))
+  }
+
   const loadPreset = (preset) => {
     if (preset === 'bell') {
       setOperations([
@@ -50,6 +56,7 @@ function App() {
         { gate: 'cnot', control: 0, target: 1 }
       ])
       setNumQubits(2)
+      setInitialState('00')
     } else if (preset === 'activity') {
       setOperations([
         { gate: 'h', target: 0 },
@@ -58,12 +65,13 @@ function App() {
         { gate: 'cnot', control: 1, target: 0 }
       ])
       setNumQubits(2)
+      setInitialState('00')
     }
   }
 
   const handleShowCode = () => {
-    setShowCodeTab(true)    // NUEVO
-    setActiveTab('code')    // NUEVO
+    setShowCodeTab(true)
+    setActiveTab('code')
   }
 
   if (showLanding) {
@@ -78,7 +86,6 @@ function App() {
         onBackToHome={() => setShowLanding(true)}
       />
 
-      {/* SOLO MOSTRAR TABS SI showCodeTab ES TRUE */}
       {showCodeTab && (
         <div className="nav-tabs">
           <button 
@@ -101,9 +108,11 @@ function App() {
           <div className="column">
             <GateSelector 
               numQubits={numQubits}
-              onNumQubitsChange={setNumQubits}
+              onNumQubitsChange={handleNumQubitsChange}
               onAddOperation={addOperation}
               onLoadPreset={loadPreset}
+              initialState={initialState}
+              onInitialStateChange={setInitialState}
             />
           </div>
 
@@ -117,8 +126,9 @@ function App() {
               onRemove={removeOperation}
               onClear={clearCircuit}
               onSimulate={setResults}
-              onShowCode={handleShowCode}  // CAMBIADO
+              onShowCode={handleShowCode}
               numQubits={numQubits}
+              initialState={initialState}
             />
           </div>
 

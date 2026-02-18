@@ -100,8 +100,9 @@ class QuantumAPIHandler(BaseHTTPRequestHandler):
                 
                 num_qubits = data.get('num_qubits', 2)
                 operations = data.get('operations', [])
-                
-                circuit = QuantumCircuit(num_qubits)
+                initial_state = data.get('initial_state', None) 
+
+                circuit = QuantumCircuit(num_qubits, initial_state=initial_state)
                 
                 for op in operations:
                     gate = op.get('gate', '').lower()

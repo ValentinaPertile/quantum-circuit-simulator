@@ -1,26 +1,14 @@
 """
-Quantum Circuit class - main interface for building quantum circuits.
+Quantum Circuit implementation.
 """
-
 import numpy as np
-from typing import List, Tuple, Dict
 from src.quantum_state import QuantumState
-from src.gates import (
-    QuantumGate, hadamard, pauli_x, pauli_y, pauli_z, cnot, swap,
-    apply_single_qubit_gate, apply_two_qubit_gate
-)
-from src.entanglement import is_entangled, measure_entanglement_entropy
+from src.gates import apply_single_qubit_gate, apply_two_qubit_gate, hadamard, pauli_x, pauli_y, pauli_z, cnot, swap
 
 
 class QuantumCircuit:
     """
-    Main class for building and simulating quantum circuits.
-    
-    Example usage:
-        circuit = QuantumCircuit(2)
-        circuit.h(0)          # Hadamard on qubit 0
-        circuit.cnot(0, 1)    # CNOT with control=0, target=1
-        circuit.measure()     # Measure all qubits
+    Represents a quantum circuit with multiple qubits.
     """
     
     def __init__(self, num_qubits: int, initial_state: str = None):
@@ -29,67 +17,110 @@ class QuantumCircuit:
         
         Args:
             num_qubits: Number of qubits in the circuit
-            initial_state: Initial state as binary string (default: |00...0⟩)
+            initial_state: Initial state as binary string (e.g., '01', '10')
+                          If None, defaults to all |0⟩
         """
         self.num_qubits = num_qubits
-        self.state = QuantumState(num_qubits, initial_state)
-        self.operations = []  # Track applied operations
-    
-    def _apply_single_gate(self, gate: QuantumGate, target: int):
-        """Apply a single-qubit gate and track the operation."""
-        self.state.state_vector = apply_single_qubit_gate(
-            self.state.state_vector, gate, target, self.num_qubits
-        )
-        self.operations.append({
-            'gate': gate.name,
-            'qubits': [target],
-            'type': 'single'
-        })
-    
-    def _apply_two_gate(self, gate: QuantumGate, control: int, target: int):
-        """Apply a two-qubit gate and track the operation."""
-        self.state.state_vector = apply_two_qubit_gate(
-            self.state.state_vector, gate, control, target, self.num_qubits
-        )
-        self.operations.append({
-            'gate': gate.name,
-            'qubits': [control, target],
-            'type': 'two'
-        })
-    
-    # Single-qubit gates
+        
+        if initial_state is None:
+            # Default: all qubits in |0⟩
+            self.state = QuantumState(num_qubits)
+        else:
+            # Custom initial state
+            if len(initial_state) != num_qubits:
+                raise ValueError(f"Initial state length must match num_qubits ({num_qubits})")
+            
+            # Create state vector with 1 at the position of the initial state
+            dim = 2 ** num_qubits
+            state_vector = np.zeros(dim, dtype=complex)
+            state_index = int(initial_state, 2)  # Convert binary string to index
+            state_vector[state_index] = 1.0
+            
+            self.state = QuantumState(num_qubits)
+            self.state.state_vector = state_vector
+        
+        self.operations = []
     
     def h(self, target: int):
         """Apply Hadamard gate to target qubit."""
-        self._apply_single_gate(hadamard(), target)
-        return self  # Allow chaining: circuit.h(0).x(1)
+        self.state.state_vector = apply_single_qubit_gate(
+            self.state.state_vector, 
+            hadamard(), 
+            target, 
+            self.num_qubits
+        )
+        self.operations.append({
+            'gate': 'H',
+            'qubits': [target],
+            'type': 'single'
+        })
+        return self
     
     def x(self, target: int):
-        """Apply Pauli-X (NOT) gate to target qubit."""
-        self._apply_single_gate(pauli_x(), target)
+        """Apply Pauli-X gate to target qubit."""
+        self.state.state_vector = apply_single_qubit_gate(
+            self.state.state_vector, 
+            pauli_x(), 
+            target, 
+            self.num_qubits
+        )
+        self.operations.append({
+            'gate': 'X',
+            'qubits': [target],
+            'type': 'single'
+        })
         return self
     
     def y(self, target: int):
         """Apply Pauli-Y gate to target qubit."""
-        self._apply_single_gate(pauli_y(), target)
+        self.state.state_vector = apply_single_qubit_gate(
+            self.state.state_vector, 
+            pauli_y(), 
+            target, 
+            self.num_qubits
+        )
+        self.operations.append({
+            'gate': 'Y',
+            'qubits': [target],
+            'type': 'single'
+        })
         return self
     
     def z(self, target: int):
         """Apply Pauli-Z gate to target qubit."""
-        self._apply_single_gate(pauli_z(), target)
+        self.state.state_vector = apply_single_qubit_gate(
+            self.state.state_vector, 
+            pauli_z(), 
+            target, 
+            self.num_qubits
+        )
+        self.operations.append({
+            'gate': 'Z',
+            'qubits': [target],
+            'type': 'single'
+        })
         return self
     
-    # Two-qubit gates
-    
     def cnot(self, control: int, target: int):
-        """Apply CNOT gate with specified control and target qubits."""
-        self._apply_two_gate(cnot(), control, target)
+        """Apply CNOT gate."""
+        self.state.state_vector = apply_two_qubit_gate(
+            self.state.state_vector,
+            cnot(),
+            control,
+            target,
+            self.num_qubits
+        )
+        self.operations.append({
+            'gate': 'CNOT',
+            'qubits': [control, target],
+            'type': 'two_qubit'
+        })
         return self
     
     def cx(self, control: int, target: int):
         """Alias for CNOT gate."""
         return self.cnot(control, target)
-
+    
     def measure_qubit(self, target: int):
         """
         Measure a specific qubit (collapses that qubit's state).
@@ -110,113 +141,113 @@ class QuantumCircuit:
             'outcome': outcome
         })
         
-        return outcome   
+        return outcome
     
-    # Measurement and analysis
-    
-    def measure(self, qubit_index: int = None) -> Tuple[str, float]:
-        """
-        Measure the quantum state.
-        
-        Args:
-            qubit_index: Specific qubit to measure (None = measure all)
-            
-        Returns:
-            Tuple of (outcome, probability)
-        """
-        return self.state.measure(qubit_index)
-    
-    def get_state(self) -> QuantumState:
+    def get_state(self):
         """Get the current quantum state."""
         return self.state
     
-    def get_statevector(self) -> np.ndarray:
-        """Get the state vector as numpy array."""
-        return self.state.state_vector
+    def get_amplitudes(self):
+        """Get amplitudes as a dictionary."""
+        amplitudes = {}
+        for i, amp in enumerate(self.state.state_vector):
+            state_str = format(i, f'0{self.num_qubits}b')
+            amplitudes[state_str] = amp
+        return amplitudes
     
-    def get_amplitudes(self) -> Dict[str, complex]:
-        """Get all non-zero amplitudes."""
-        return self.state.get_amplitudes()
-    
-    def is_entangled(self) -> bool:
-        """Check if the state is entangled (only for 2-qubit systems)."""
-        if self.num_qubits != 2:
-            raise ValueError("Entanglement check only for 2-qubit systems")
-        return is_entangled(self.state)
-    
-    def analyze_entanglement(self) -> Dict:
-        """Full entanglement analysis (only for 2-qubit systems)."""
-        if self.num_qubits != 2:
-            raise ValueError("Entanglement analysis only for 2-qubit systems")
-        return measure_entanglement_entropy(self.state)
-    
-    def get_operations(self) -> List[Dict]:
-        """Get list of all operations applied to the circuit."""
-        return self.operations
+    def measure(self):
+        """Measure all qubits."""
+        return self.state.measure()
     
     def reset(self):
-        """Reset circuit to initial state."""
+        """Reset the circuit to initial state."""
         self.state = QuantumState(self.num_qubits)
         self.operations = []
+        return self
     
-    def __str__(self) -> str:
-        """String representation showing the current state."""
-        return f"QuantumCircuit({self.num_qubits} qubits): {self.state}"
+    def get_operations(self):
+        """Get list of operations applied to the circuit."""
+        return self.operations
     
-    def __repr__(self) -> str:
-        return self.__str__()
+    def is_entangled(self):
+        """Check if the quantum state is entangled (only for 2-qubit systems)."""
+        if self.num_qubits != 2:
+            raise ValueError("Entanglement check only implemented for 2-qubit systems")
+        
+        from src.entanglement import is_entangled
+        return is_entangled(self.state.state_vector)
+    
+    def analyze_entanglement(self):
+        """Perform comprehensive entanglement analysis (only for 2-qubit systems)."""
+        if self.num_qubits != 2:
+            raise ValueError("Entanglement analysis only implemented for 2-qubit systems")
+        
+        from src.entanglement import measure_entanglement_entropy
+        return measure_entanglement_entropy(self.state.state_vector)
+    
+    def __str__(self):
+        """String representation of the circuit state."""
+        return str(self.state)
 
 
-def create_bell_state(bell_type: str = '00') -> QuantumCircuit:
+def create_bell_state(state_type: str = '00'):
     """
-    Create one of the four Bell states (maximally entangled states).
+    Create one of the four Bell states.
     
     Args:
-        bell_type: '00' (Φ+), '01' (Ψ+), '10' (Φ-), or '11' (Ψ-)
-        
+        state_type: Type of Bell state ('00', '01', '10', '11')
+                   '00' -> |Φ+⟩ = (|00⟩ + |11⟩)/√2
+                   '01' -> |Ψ+⟩ = (|01⟩ + |10⟩)/√2
+                   '10' -> |Φ-⟩ = (|00⟩ - |11⟩)/√2
+                   '11' -> |Ψ-⟩ = (|01⟩ - |10⟩)/√2
+    
     Returns:
-        QuantumCircuit with the Bell state prepared
-        
-    Bell states:
-        |Φ+⟩ = (|00⟩ + |11⟩)/√2  (bell_type='00')
-        |Ψ+⟩ = (|01⟩ + |10⟩)/√2  (bell_type='01')
-        |Φ-⟩ = (|00⟩ - |11⟩)/√2  (bell_type='10')
-        |Ψ-⟩ = (|01⟩ - |10⟩)/√2  (bell_type='11')
+        QuantumCircuit with the specified Bell state
     """
     circuit = QuantumCircuit(2)
+    
+    # Apply X gates based on state type
+    if state_type[0] == '1':
+        circuit.x(0)
+    if state_type[1] == '1':
+        circuit.x(1)
+    
+    # Create superposition and entanglement
     circuit.h(0)
     circuit.cnot(0, 1)
     
-    # For other bell types, add gates:
-    if bell_type == '01':
-        circuit.x(1)  # Apply X to qubit 1
-    elif bell_type == '10':
-        circuit.z(0)  # Apply Z to qubit 0
-    elif bell_type == '11':
-        circuit.x(1)
+    # Apply Z gate for negative phase if needed
+    if state_type == '10':
         circuit.z(0)
     
     return circuit
 
 
-def create_ghz_state(num_qubits: int = 3) -> QuantumCircuit:
+def create_ghz_state(num_qubits: int):
     """
-    Create a GHZ (Greenberger–Horne–Zeilinger) state.
+    Create a GHZ (Greenberger-Horne-Zeilinger) state.
+    For n qubits: (|00...0⟩ + |11...1⟩)/√2
     
-    For 3 qubits: |GHZ⟩ = (|000⟩ + |111⟩)/√2
+    Note: Currently limited to 2 qubits due to gate implementation.
     
     Args:
-        num_qubits: Number of qubits (default: 3)
-        
+        num_qubits: Number of qubits (currently only 2 supported)
+    
     Returns:
         QuantumCircuit with GHZ state
     """
+    if num_qubits < 2:
+        raise ValueError("GHZ state requires at least 2 qubits")
+    
+    if num_qubits > 2:
+        raise NotImplementedError("GHZ state for >2 qubits not yet implemented")
+    
     circuit = QuantumCircuit(num_qubits)
     
     # Apply Hadamard to first qubit
     circuit.h(0)
     
-    # Apply CNOT chain
+    # Apply CNOT gates in sequence
     for i in range(num_qubits - 1):
         circuit.cnot(i, i + 1)
     

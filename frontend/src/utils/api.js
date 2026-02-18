@@ -1,6 +1,6 @@
 const API_URL = 'http://127.0.0.1:5000/api'
 
-export async function simulateCircuit(numQubits, operations) {
+export async function simulateCircuit(numQubits, operations, initialState = null) {
   const response = await fetch(`${API_URL}/simulate`, {
     method: 'POST',
     headers: {
@@ -8,7 +8,8 @@ export async function simulateCircuit(numQubits, operations) {
     },
     body: JSON.stringify({
       num_qubits: numQubits,
-      operations: operations
+      operations: operations,
+      initial_state: initialState  // NUEVO
     })
   })
 

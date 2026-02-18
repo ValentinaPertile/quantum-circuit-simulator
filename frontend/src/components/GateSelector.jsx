@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 const GATES = ['X', 'Y', 'Z', 'H', 'CNOT', 'MEASURE']
 
-function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPreset }) {
+function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPreset, initialState, onInitialStateChange }) {
   const [selectedGate, setSelectedGate] = useState(null)
   const [targetQubit, setTargetQubit] = useState(0)
   const [controlQubit, setControlQubit] = useState(0)
@@ -41,6 +41,12 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
     return gate
   }
 
+  const handleQubitStateChange = (qubitIndex, value) => {
+    const newState = initialState.split('')
+    newState[qubitIndex] = value
+    onInitialStateChange(newState.join(''))
+  }
+
   return (
     <>
       <div className="card">
@@ -55,6 +61,25 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
             value={numQubits}
             onChange={(e) => onNumQubitsChange(parseInt(e.target.value))}
           />
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Initial State</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+          {[...Array(numQubits)].map((_, i) => (
+            <div key={i} className="config-row">
+              <label className="config-label">Qubit {i}:</label>
+              <select 
+                className="config-input"
+                value={initialState[i] || '0'}
+                onChange={(e) => handleQubitStateChange(i, e.target.value)}
+              >
+                <option value="0">|0⟩</option>
+                <option value="1">|1⟩</option>
+              </select>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -116,7 +141,7 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
             Bell State
           </button>
           <button className="btn btn-secondary" onClick={() => onLoadPreset('activity')}>
-            Activity 5.4.3
+            Example
           </button>
         </div>
       </div>

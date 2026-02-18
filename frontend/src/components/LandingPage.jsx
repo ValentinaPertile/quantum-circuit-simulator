@@ -30,7 +30,7 @@ function LandingPage({ onStart }) {
           <FeatureCard 
             icon="{ }"
             title="Code Export"
-            description="Export to Python, Qiskit, or Cirq formats"
+            description="Export to Python and Qiskit"
           />
         </div>
 

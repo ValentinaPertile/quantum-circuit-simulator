@@ -1,23 +1,23 @@
 import React from 'react'
 import { simulateCircuit } from '../utils/api'
 
-function OperationsList({ operations, onRemove, onClear, onSimulate, onShowCode, numQubits }) {
-  const handleSimulate = async () => {
+function OperationsList({ operations, onRemove, onClear, onSimulate, onShowCode, numQubits, initialState }) {
+    const handleSimulate = async () => {
     if (operations.length === 0) {
-      alert('Add some gates first!')
-      return
+        alert('Add some gates first!')
+        return
     }
 
     try {
-      const data = await simulateCircuit(numQubits, operations)
-      onSimulate(data)
+    const data = await simulateCircuit(numQubits, operations, initialState)  // AGREGADO initialState
+    onSimulate(data)
     } catch (error) {
-      alert('Failed to connect to backend. Make sure the Python server is running.')
-      console.error(error)
+        alert('Failed to connect to backend. Make sure the Python server is running.')
+        console.error(error)
+        } 
     }
-  }
 
-  return (
+    return (
     <div className="card">
       <div className="operations-header">
         <h2 className="card-title" style={{ marginBottom: 0 }}>Operations</h2>
