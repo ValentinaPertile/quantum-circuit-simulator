@@ -15,18 +15,170 @@
     --shadow-hover: rgba(107, 127, 95, 0.2);
 }
 
-[data-theme="dark"] {
-    --beige-100: #2a2822;
-    --beige-200: #3a3630;
-    --beige-300: #4a4638;
-    --beige-400: #5a5648;
-    --text-primary: #e8e4d9;
-    --text-secondary: #c9bfa8;
-    --text-muted: #8a8478;
-    --shadow: rgba(0, 0, 0, 0.3);
-    --shadow-hover: rgba(0, 0, 0, 0.5);
+/* ===== CSS VARIABLES - Beige & Moss Green Theme ===== */
+:root {
+    --beige-100: #f5f1e8;
+    --beige-200: #ebe4d6;
+    --beige-300: #ddd5c3;
+    --beige-400: #c9bfa8;
+    --moss-green: #6b7f5f;
+    --moss-green-dark: #556349;
+    --moss-green-light: #8a9d7d;
+    --text-primary: #3d3d3d;
+    --text-secondary: #5a5a5a;
+    --text-muted: #8a8a8a;
+    --white: #ffffff;
+    --shadow: rgba(107, 127, 95, 0.1);
+    --shadow-hover: rgba(107, 127, 95, 0.2);
 }
 
+[data-theme="dark"] {
+    --beige-100: #1a1a16;
+    --beige-200: #252520;
+    --beige-300: #3a3a30;
+    --beige-400: #4a4a3a;
+    --moss-green: #8a9d7d;
+    --moss-green-dark: #9db08e;
+    --moss-green-light: #b0c29f;
+    --text-primary: #e8e4d9;
+    --text-secondary: #b8b4a9;
+    --text-muted: #8a8678;
+    --white: #2d2d28;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --shadow-hover: rgba(0, 0, 0, 0.6);
+}
+
+/* ===== DARK MODE SPECIFIC ADJUSTMENTS ===== */
+[data-theme="dark"] .landing-hero {
+    background: var(--beige-200);
+}
+
+[data-theme="dark"] .feature-card {
+    background: var(--beige-200);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .landing-info {
+    background: var(--beige-200);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .btn-start {
+    background: var(--moss-green);
+    color: var(--beige-100);
+}
+
+[data-theme="dark"] .btn-start:hover {
+    background: var(--moss-green-light);
+}
+
+[data-theme="dark"] .gate-btn {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .gate-btn:hover {
+    background: var(--moss-green);
+    color: var(--beige-100);
+}
+
+[data-theme="dark"] .operation-badge {
+    background: var(--moss-green-dark);
+    color: var(--beige-100);
+}
+
+[data-theme="dark"] .amplitude-bar {
+    background: var(--moss-green-light);
+}
+
+[data-theme="dark"] .entanglement-status.entangled {
+    background: rgba(138, 157, 125, 0.2);
+    border-color: var(--moss-green-light);
+    color: var(--moss-green-light);
+}
+
+[data-theme="dark"] .entanglement-status.not-entangled {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .code-editable,
+[data-theme="dark"] .python-code {
+    background: var(--beige-200);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .code-comment {
+    color: var(--moss-green-light);
+}
+
+[data-theme="dark"] .code-keyword {
+    color: var(--moss-green-light);
+}
+
+[data-theme="dark"] .code-string {
+    color: var(--beige-400);
+}
+
+[data-theme="dark"] .code-function {
+    color: var(--moss-green);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select {
+    background: var(--beige-200);
+    color: var(--text-primary);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .circuit-display svg text {
+    fill: var(--text-primary);
+}
+
+[data-theme="dark"] .circuit-display svg line {
+    stroke: var(--beige-400);
+}
+
+[data-theme="dark"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--beige-200);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .modal-header {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .btn-primary {
+    background: var(--moss-green);
+    border-color: var(--moss-green);
+    color: var(--beige-100);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background: var(--moss-green-light);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: var(--beige-300);
+    color: var(--text-primary);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: var(--moss-green);
+    color: var(--beige-100);
+}
+
+[data-theme="dark"] .info-card {
+    background: linear-gradient(135deg, var(--moss-green-dark) 0%, var(--moss-green) 100%);
+}
 /* ===== LAYOUT ===== */
 .app {
     min-height: 100vh;
