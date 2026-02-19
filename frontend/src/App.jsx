@@ -44,10 +44,38 @@ function App() {
     setResults(null)
   }
 
-  const handleNumQubitsChange = (newNumQubits) => {
-    setNumQubits(newNumQubits)
-    setInitialState('0'.repeat(newNumQubits))
+  
+const handleNumQubitsChange = (newNumQubits) => {
+  const oldNumQubits = numQubits
+  
+  const wouldLoseOperations = operations.some(op => {
+    if (op.target !== undefined && op.target >= newNumQubits) return true
+    if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return true
+    return false
+  })
+  
+  if (wouldLoseOperations && operations.length > 0) {
+    const confirmed = window.confirm(
+      `Changing the number of qubits will remove some operations that reference non-existent qubits. Continue?`
+    )
+    if (!confirmed) {
+      return 
+    }
   }
+  
+  setNumQubits(newNumQubits)
+  setInitialState('0'.repeat(newNumQubits))
+  
+  // Filtrar operaciones válidas
+  const validOperations = operations.filter(op => {
+    if (op.target !== undefined && op.target >= newNumQubits) return false
+    if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return false
+    return true
+  })
+  
+  setOperations(validOperations)
+  setResults(null)
+}
 
   const loadPreset = (preset) => {
     if (preset === 'bell') {

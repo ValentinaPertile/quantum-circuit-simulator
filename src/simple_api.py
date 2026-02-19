@@ -98,29 +98,146 @@ class QuantumAPIHandler(BaseHTTPRequestHandler):
                 
                 print(f"Received simulation request: {data}")
                 
+                # Validar datos de entrada
                 num_qubits = data.get('num_qubits', 2)
                 operations = data.get('operations', [])
-                initial_state = data.get('initial_state', None) 
-
-                circuit = QuantumCircuit(num_qubits, initial_state=initial_state)
+                initial_state = data.get('initial_state', None)
                 
-                for op in operations:
+                # Validación: número de qubits
+                if not isinstance(num_qubits, int) or num_qubits < 1 or num_qubits > 10:
+                    self._set_headers(400)
+                    self.wfile.write(json.dumps({
+                        'success': False,
+                        'error': 'Number of qubits must be between 1 and 10'
+                    }).encode())
+                    return
+                
+                # Validación: initial_state
+                if initial_state is not None:
+                    if not isinstance(initial_state, str):
+                        self._set_headers(400)
+                        self.wfile.write(json.dumps({
+                            'success': False,
+                            'error': 'Initial state must be a binary string'
+                        }).encode())
+                        return
+                    
+                    if len(initial_state) != num_qubits:
+                        self._set_headers(400)
+                        self.wfile.write(json.dumps({
+                            'success': False,
+                            'error': f'Initial state length ({len(initial_state)}) must match number of qubits ({num_qubits})'
+                        }).encode())
+                        return
+                    
+                    if not all(c in '01' for c in initial_state):
+                        self._set_headers(400)
+                        self.wfile.write(json.dumps({
+                            'success': False,
+                            'error': 'Initial state must only contain 0 and 1'
+                        }).encode())
+                        return
+                
+                # Crear circuito
+                try:
+                    circuit = QuantumCircuit(num_qubits, initial_state=initial_state)
+                except ValueError as e:
+                    self._set_headers(400)
+                    self.wfile.write(json.dumps({
+                        'success': False,
+                        'error': f'Error creating circuit: {str(e)}'
+                    }).encode())
+                    return
+                
+                # Aplicar operaciones con validación
+                for idx, op in enumerate(operations):
                     gate = op.get('gate', '').lower()
                     
-                    if gate == 'h':
-                        circuit.h(op['target'])
-                    elif gate == 'x':
-                        circuit.x(op['target'])
-                    elif gate == 'y':
-                        circuit.y(op['target'])
-                    elif gate == 'z':
-                        circuit.z(op['target'])
-                    elif gate == 'cnot' or gate == 'cx':
-                        circuit.cnot(op['control'], op['target'])
-                    elif gate == 'measure':
-                        outcome = circuit.measure_qubit(op['target'])
-                        print(f"Measured qubit {op['target']}: outcome = {outcome}")
+                    # Validar que la operación tenga gate
+                    if not gate:
+                        self._set_headers(400)
+                        self.wfile.write(json.dumps({
+                            'success': False,
+                            'error': f'Operation {idx} missing gate type'
+                        }).encode())
+                        return
+                    
+                    try:
+                        if gate == 'h':
+                            target = op.get('target')
+                            if target is None or target < 0 or target >= num_qubits:
+                                raise ValueError(f'Invalid target qubit {target} for H gate. Circuit has {num_qubits} qubits.')
+                            circuit.h(target)
+                            
+                        elif gate == 'x':
+                            target = op.get('target')
+                            if target is None or target < 0 or target >= num_qubits:
+                                raise ValueError(f'Invalid target qubit {target} for X gate. Circuit has {num_qubits} qubits.')
+                            circuit.x(target)
+                            
+                        elif gate == 'y':
+                            target = op.get('target')
+                            if target is None or target < 0 or target >= num_qubits:
+                                raise ValueError(f'Invalid target qubit {target} for Y gate. Circuit has {num_qubits} qubits.')
+                            circuit.y(target)
+                            
+                        elif gate == 'z':
+                            target = op.get('target')
+                            if target is None or target < 0 or target >= num_qubits:
+                                raise ValueError(f'Invalid target qubit {target} for Z gate. Circuit has {num_qubits} qubits.')
+                            circuit.z(target)
+                            
+                        elif gate == 'cnot' or gate == 'cx':
+                            control = op.get('control')
+                            target = op.get('target')
+                            
+                            if control is None or target is None:
+                                raise ValueError('CNOT gate requires both control and target qubits')
+                            
+                            if control < 0 or control >= num_qubits:
+                                raise ValueError(f'Invalid control qubit {control} for CNOT. Circuit has {num_qubits} qubits.')
+                            
+                            if target < 0 or target >= num_qubits:
+                                raise ValueError(f'Invalid target qubit {target} for CNOT. Circuit has {num_qubits} qubits.')
+                            
+                            if control == target:
+                                raise ValueError(f'Control and target qubits must be different for CNOT gate')
+                            
+                            circuit.cnot(control, target)
+                            
+                        elif gate == 'measure':
+                            target = op.get('target')
+                            if target is None or target < 0 or target >= num_qubits:
+                                raise ValueError(f'Invalid target qubit {target} for measurement. Circuit has {num_qubits} qubits.')
+                            outcome = circuit.measure_qubit(target)
+                            print(f"Measured qubit {target}: outcome = {outcome}")
+                            
+                        else:
+                            raise ValueError(f'Unknown gate type: {gate}')
+                            
+                    except ValueError as e:
+                        self._set_headers(400)
+                        self.wfile.write(json.dumps({
+                            'success': False,
+                            'error': f'Operation {idx} ({gate}): {str(e)}'
+                        }).encode())
+                        return
+                    except IndexError as e:
+                        self._set_headers(400)
+                        self.wfile.write(json.dumps({
+                            'success': False,
+                            'error': f'Operation {idx} ({gate}): Invalid qubit index. Circuit has {num_qubits} qubits.'
+                        }).encode())
+                        return
+                    except Exception as e:
+                        self._set_headers(400)
+                        self.wfile.write(json.dumps({
+                            'success': False,
+                            'error': f'Operation {idx} ({gate}): Unexpected error - {str(e)}'
+                        }).encode())
+                        return
                 
+                # Obtener amplitudes
                 amplitudes = circuit.get_amplitudes()
                 
                 amp_data = {}
@@ -132,11 +249,11 @@ class QuantumAPIHandler(BaseHTTPRequestHandler):
                         'probability': float(np.abs(amp) ** 2)
                     }
                 
+                # Análisis de entrelazamiento (solo para 2 qubits)
                 entanglement_data = None
                 if num_qubits == 2:
                     try:
                         ent_result = circuit.analyze_entanglement()
-                        # Convert all numpy types to Python native types
                         entanglement_data = {
                             'is_entangled': bool(ent_result['is_entangled']),
                             'entropy': float(ent_result['entropy']),
@@ -158,12 +275,22 @@ class QuantumAPIHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(response).encode())
                 print("Simulation completed successfully")
                 
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                self._set_headers(400)
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': 'Invalid JSON in request body'
+                }).encode())
             except Exception as e:
                 print(f"Error in simulate: {e}")
                 import traceback
                 traceback.print_exc()
-                self._set_headers(400)
-                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
+                self._set_headers(500)
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': f'Internal server error: {str(e)}'
+                }).encode())
         else:
             self._set_headers(404)
             self.wfile.write(json.dumps({'error': 'Not found'}).encode())
