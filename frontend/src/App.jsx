@@ -150,13 +150,10 @@ const handleNumQubitsChange = (newNumQubits) => {
               operations={operations}
             />
             <OperationsList 
-              operations={operations}
-              onRemove={removeOperation}
-              onClear={clearCircuit}
-              onSimulate={setResults}
-              onShowCode={handleShowCode}
-              numQubits={numQubits}
-              initialState={initialState}
+                results={results} 
+                numQubits={numQubits}
+                operations={operations}
+                initialState={initialState}
             />
           </div>
 

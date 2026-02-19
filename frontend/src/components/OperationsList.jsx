@@ -55,15 +55,30 @@ function OperationsList({ operations, onRemove, onClear, onSimulate, onShowCode,
 
 function OperationItem({ operation, index, onRemove }) {
   const { gate, target, control } = operation
-  let gateName = gate.toUpperCase()
-
+  
+  let displayName = ''
   let details = ''
+  
   if (gate === 'cnot') {
-    details = `control: q${control} → target: q${target}`
+    displayName = 'CNOT'
+    details = `CNOT gate: control q${control} → target q${target}`
   } else if (gate === 'measure') {
-    gateName = 'M'
-    details = `measure qubit ${target}`
+    displayName = 'M'
+    details = `Measurement on qubit ${target}`
+  } else if (gate === 'h') {
+    displayName = 'H'
+    details = `Hadamard gate on qubit ${target}`
+  } else if (gate === 'x') {
+    displayName = 'X'
+    details = `Pauli-X gate on qubit ${target}`
+  } else if (gate === 'y') {
+    displayName = 'Y'
+    details = `Pauli-Y gate on qubit ${target}`
+  } else if (gate === 'z') {
+    displayName = 'Z'
+    details = `Pauli-Z gate on qubit ${target}`
   } else {
+    displayName = gate.toUpperCase()
     details = `qubit ${target}`
   }
 
@@ -71,7 +86,7 @@ function OperationItem({ operation, index, onRemove }) {
     <div className="operation-item">
       <div className="operation-info">
         <span className="operation-badge">
-          {gateName}
+          {displayName}
         </span>
         <span className="operation-details">{details}</span>
       </div>

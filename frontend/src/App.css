@@ -84,8 +84,15 @@
 }
 
 [data-theme="dark"] .operation-badge {
-    background: var(--moss-green-dark);
-    color: var(--beige-100);
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    background: var(--moss-green);
+    color: var(--white);
+    white-space: nowrap;  
+    min-width: 90px;      
+    text-align: center;
 }
 
 [data-theme="dark"] .amplitude-bar {
@@ -867,6 +874,128 @@
 ::-webkit-scrollbar-thumb:hover {
     background: var(--moss-green);
 }
+
+/* ===== STATE VECTOR NOTATION ===== */
+.state-vector-container {
+    background: var(--beige-100);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid var(--beige-300);
+}
+
+.state-notation {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.1rem;
+    line-height: 2;
+    color: var(--text-primary);
+    text-align: center;
+    padding: 1rem;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.state-notation .psi {
+    font-weight: 600;
+    color: var(--moss-green-dark);
+    font-size: 1.2rem;
+}
+
+.state-notation .coefficient {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0.2rem;
+}
+
+.state-notation .ket {
+    font-weight: 600;
+    color: var(--moss-green);
+    margin: 0 0.3rem;
+}
+
+.state-notation .operator {
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin: 0 0.3rem;
+}
+
+/* ===== CIRCUIT NOTATION ===== */
+.circuit-notation-container {
+    background: var(--beige-100);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid var(--beige-300);
+}
+
+.circuit-flow {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1rem;
+    line-height: 2;
+    color: var(--text-primary);
+    text-align: center;
+    padding: 1rem;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.circuit-flow .initial-state,
+.circuit-flow .final-state {
+    font-weight: 600;
+    color: var(--moss-green-dark);
+    font-size: 1.1rem;
+    margin: 0 0.5rem;
+}
+
+.circuit-flow .gate-notation {
+    background: var(--moss-green);
+    color: var(--white);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin: 0 0.3rem;
+    font-size: 0.9rem;
+}
+
+.circuit-flow .arrow {
+    color: var(--text-secondary);
+    margin: 0 0.3rem;
+    font-weight: bold;
+}
+
+.circuit-expansion {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--white);
+    border-radius: 8px;
+    border: 1px solid var(--beige-300);
+}
+
+.expansion-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.expansion-content {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+[data-theme="dark"] .circuit-notation-container {
+    background: var(--beige-200);
+}
+
+[data-theme="dark"] .circuit-flow .gate-notation {
+    background: var(--moss-green-dark);
+    color: var(--beige-100);
+}
+
+[data-theme="dark"] .circuit-expansion {
+    background: var(--beige-300);
+}
+
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1400px) {

@@ -1,9 +1,17 @@
 import React from 'react'
 
-function Results({ results, numQubits }) {
+function Results({ results, numQubits, operations, initialState }) {
   if (!results || !results.success) {
     return (
       <>
+        <div className="card">
+          <h2 className="card-title">Circuit Notation</h2>
+          <div className="circuit-empty">Run simulation to see circuit notation</div>
+        </div>
+        <div className="card">
+          <h2 className="card-title">State Vector</h2>
+          <div className="circuit-empty">Run simulation to see results</div>
+        </div>
         <div className="card">
           <h2 className="card-title">Quantum State</h2>
           <div className="circuit-empty">Run simulation to see results</div>
@@ -20,6 +28,20 @@ function Results({ results, numQubits }) {
 
   return (
     <>
+      <div className="card">
+        <h2 className="card-title">Circuit Notation</h2>
+        <CircuitNotation 
+          operations={operations} 
+          initialState={initialState || '0'.repeat(numQubits)}
+          finalAmplitudes={amplitudes}
+        />
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">State Vector</h2>
+        <StateVectorNotation amplitudes={amplitudes} />
+      </div>
+
       <div className="card">
         <h2 className="card-title">Quantum State</h2>
         <div>
@@ -41,6 +63,125 @@ function Results({ results, numQubits }) {
   )
 }
 
+function CircuitNotation({ operations, initialState, finalAmplitudes }) {
+  // Construir la notación del circuito
+  const gateNotations = operations.map(op => {
+    if (op.gate === 'cnot') {
+      return `CNOT_{${op.control},${op.target}}`
+    } else if (op.gate === 'measure') {
+      return `M_{${op.target}}`
+    } else {
+      return `${op.gate.toUpperCase()}_{${op.target}}`
+    }
+  })
+
+  // Estado final en notación compacta
+  const finalState = Object.entries(finalAmplitudes)
+    .filter(([_, amp]) => Math.abs(amp.real) > 0.001 || Math.abs(amp.imag) > 0.001)
+    .map(([state, amp]) => {
+      const magnitude = Math.sqrt(amp.real * amp.real + amp.imag * amp.imag)
+      const coef = magnitude.toFixed(4)
+      return `${coef}|${state}⟩`
+    })
+    .join(' + ')
+
+  return (
+    <div className="circuit-notation-container">
+      <div className="circuit-flow">
+        <span className="initial-state">|{initialState}⟩</span>
+        <span className="arrow">→</span>
+        {gateNotations.map((gate, idx) => (
+          <React.Fragment key={idx}>
+            <span className="gate-notation">{gate}</span>
+            <span className="arrow">→</span>
+          </React.Fragment>
+        ))}
+        <span className="final-state">|ψ⟩</span>
+      </div>
+      
+      <div className="circuit-expansion">
+        <div className="expansion-label">Where:</div>
+        <div className="expansion-content">
+          |ψ⟩ = {finalState || '0'}
+        </div>
+      </div>
+
+      <button 
+        className="btn btn-secondary" 
+        style={{ marginTop: '1rem', width: '100%', fontSize: '0.85rem' }}
+        onClick={() => {
+          const flow = document.querySelector('.circuit-flow').textContent
+          const expansion = document.querySelector('.expansion-content').textContent
+          const text = `${flow}\n${expansion}`
+          navigator.clipboard.writeText(text)
+          alert('Circuit notation copied to clipboard!')
+        }}
+      >
+        Copy Circuit Notation
+      </button>
+    </div>
+  )
+}
+
+function StateVectorNotation({ amplitudes }) {
+  if (!amplitudes) {
+    return <div className="circuit-empty">No amplitude data</div>
+  }
+
+  const terms = []
+  
+  for (const [state, amp] of Object.entries(amplitudes)) {
+    const magnitude = Math.sqrt(amp.real * amp.real + amp.imag * amp.imag)
+    
+    if (magnitude > 0.001) {
+      let coefficient = ''
+      
+      if (Math.abs(magnitude - 1) < 0.001) {
+        coefficient = amp.real < 0 ? '-' : ''
+      } else {
+        coefficient = magnitude.toFixed(4)
+        if (amp.real < 0) coefficient = '-' + coefficient
+      }
+      
+      terms.push({ coefficient, state, magnitude })
+    }
+  }
+
+  if (terms.length === 0) {
+    return (
+      <div className="state-vector-container">
+        <div className="state-notation">|ψ⟩ = 0</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="state-vector-container">
+      <div className="state-notation">
+        <span className="psi">|ψ⟩ = </span>
+        {terms.map((term, idx) => (
+          <span key={idx}>
+            {idx > 0 && <span className="operator"> + </span>}
+            <span className="coefficient">{term.coefficient}</span>
+            <span className="ket">|{term.state}⟩</span>
+          </span>
+        ))}
+      </div>
+      <button 
+        className="btn btn-secondary" 
+        style={{ marginTop: '1rem', width: '100%', fontSize: '0.85rem' }}
+        onClick={() => {
+          const text = document.querySelector('.state-notation').textContent
+          navigator.clipboard.writeText(text)
+          alert('State notation copied to clipboard!')
+        }}
+      >
+        Copy Notation
+      </button>
+    </div>
+  )
+}
+
 function AmplitudeBar({ state, probability }) {
   const percentage = (probability * 100).toFixed(1)
 
@@ -58,7 +199,6 @@ function AmplitudeBar({ state, probability }) {
 }
 
 function EntanglementInfo({ data }) {
-  // Validar que data tenga todos los campos necesarios
   if (!data || typeof data !== 'object') {
     return <div className="circuit-empty">Error loading entanglement data</div>
   }
