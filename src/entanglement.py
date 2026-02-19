@@ -2,169 +2,147 @@
 Entanglement analysis for quantum states.
 """
 import numpy as np
-from src.quantum_state import QuantumState
+from typing import Tuple
 
 
-def calculate_density_matrix(state: QuantumState) -> np.ndarray:
+def calculate_density_matrix(state_vector: np.ndarray) -> np.ndarray:
     """
-    Calculate the density matrix ρ = |ψ⟩⟨ψ| of a pure state.
+    Calculate the density matrix from a state vector.
     
     Args:
-        state: QuantumState
+        state_vector: Pure state vector
         
     Returns:
-        Density matrix as numpy array
+        Density matrix (outer product of state with itself)
     """
-    psi = state.state_vector.reshape(-1, 1)  # Column vector
-    return psi @ psi.conj().T  # |ψ⟩⟨ψ|
+    state_vector = state_vector.reshape(-1, 1)
+    return state_vector @ state_vector.conj().T
 
 
-def partial_trace(density_matrix: np.ndarray, keep_qubit: int, num_qubits: int) -> np.ndarray:
+def partial_trace(density_matrix: np.ndarray, keep_qubit: int = 0) -> np.ndarray:
     """
-    Calculate the partial trace to get reduced density matrix.
-    
-    For a 2-qubit system, traces out one qubit to analyze the other.
+    Calculate the partial trace of a 2-qubit density matrix.
     
     Args:
-        density_matrix: Full density matrix
+        density_matrix: 4x4 density matrix of 2-qubit system
         keep_qubit: Which qubit to keep (0 or 1)
-        num_qubits: Total number of qubits
         
     Returns:
-        Reduced density matrix for the kept qubit
+        2x2 reduced density matrix
     """
-    if num_qubits != 2:
-        raise NotImplementedError("Only implemented for 2-qubit systems")
+    if density_matrix.shape != (4, 4):
+        raise ValueError("Density matrix must be 4x4 for 2-qubit system")
     
-    # Dimension of each qubit
-    d = 2
-    
-    # Reshape to tensor form
-    rho_tensor = density_matrix.reshape(d, d, d, d)
+    reduced = np.zeros((2, 2), dtype=complex)
     
     if keep_qubit == 0:
-        # Trace out qubit 1 (sum over indices 1 and 3)
-        rho_reduced = np.trace(rho_tensor, axis1=1, axis2=3)
+        # Trace out qubit 1
+        reduced[0, 0] = density_matrix[0, 0] + density_matrix[1, 1]
+        reduced[0, 1] = density_matrix[0, 2] + density_matrix[1, 3]
+        reduced[1, 0] = density_matrix[2, 0] + density_matrix[3, 1]
+        reduced[1, 1] = density_matrix[2, 2] + density_matrix[3, 3]
     else:
-        # Trace out qubit 0 (sum over indices 0 and 2)
-        rho_reduced = np.trace(rho_tensor, axis1=0, axis2=2)
+        # Trace out qubit 0
+        reduced[0, 0] = density_matrix[0, 0] + density_matrix[2, 2]
+        reduced[0, 1] = density_matrix[0, 1] + density_matrix[2, 3]
+        reduced[1, 0] = density_matrix[1, 0] + density_matrix[3, 2]
+        reduced[1, 1] = density_matrix[1, 1] + density_matrix[3, 3]
     
-    return rho_reduced
+    return reduced
 
 
-def von_neumann_entropy(density_matrix: np.ndarray) -> float:
+def von_neumann_entropy(state_vector: np.ndarray) -> float:
     """
-    Calculate Von Neumann entropy S = -Tr(ρ log₂ ρ).
-    
-    For a pure state: S = 0
-    For a maximally mixed state: S = log₂(d) where d is dimension
+    Calculate the von Neumann entropy of a subsystem.
     
     Args:
-        density_matrix: Density matrix
+        state_vector: State vector of the full system
         
     Returns:
-        Entropy value
+        von Neumann entropy
     """
-    # Get eigenvalues
-    eigenvalues = np.linalg.eigvalsh(density_matrix)
+    density_matrix = calculate_density_matrix(state_vector)
+    reduced = partial_trace(density_matrix, keep_qubit=0)
     
-    # Filter out zero or negative eigenvalues (numerical noise)
+    # Get eigenvalues
+    eigenvalues = np.linalg.eigvalsh(reduced)
+    
+    # Filter out near-zero eigenvalues to avoid log(0)
     eigenvalues = eigenvalues[eigenvalues > 1e-10]
     
-    # S = -Σ λᵢ log₂(λᵢ)
+    if len(eigenvalues) == 0:
+        return 0.0
+    
+    # Calculate entropy: -sum(λ * log2(λ))
     entropy = -np.sum(eigenvalues * np.log2(eigenvalues))
     
-    return entropy
+    return float(entropy)
 
 
-def is_entangled(state: QuantumState, tolerance: float = 1e-6) -> bool:
+def is_entangled(state_vector: np.ndarray, threshold: float = 1e-10) -> bool:
     """
-    Determine if a two-qubit state is entangled.
-    
-    Method: Calculate the Von Neumann entropy of the reduced density matrix.
-    - If entropy ≈ 0: state is separable (not entangled)
-    - If entropy > 0: state is entangled
+    Check if a 2-qubit state is entangled.
     
     Args:
-        state: Two-qubit QuantumState
-        tolerance: Numerical tolerance for entropy
+        state_vector: State vector of 2-qubit system
+        threshold: Threshold for considering entropy non-zero
         
     Returns:
-        True if entangled, False otherwise
+        True if entangled, False if separable
     """
-    if state.num_qubits != 2:
-        raise ValueError("Entanglement analysis only for 2-qubit systems")
-    
-    rho = calculate_density_matrix(state)
-    rho_reduced = partial_trace(rho, keep_qubit=0, num_qubits=2)
-    entropy = von_neumann_entropy(rho_reduced)
-    
-    return entropy > tolerance
+    entropy = von_neumann_entropy(state_vector)
+    return entropy > threshold
 
 
-def calculate_concurrence(state: QuantumState) -> float:
+def calculate_concurrence(state_vector: np.ndarray) -> float:
     """
-    Calculate concurrence - another entanglement measure.
-    
-    For 2 qubits: C ∈ [0, 1]
-    - C = 0: separable
-    - C = 1: maximally entangled (Bell state)
+    Calculate the concurrence of a 2-qubit state.
     
     Args:
-        state: Two-qubit QuantumState
+        state_vector: State vector of 2-qubit system
         
     Returns:
-        Concurrence value
+        Concurrence value (0 = separable, 1 = maximally entangled)
     """
-    if state.num_qubits != 2:
-        raise ValueError("Concurrence only for 2-qubit systems")
+    if len(state_vector) != 4:
+        raise ValueError("State vector must have 4 components for 2-qubit system")
     
-    # Get state vector
-    psi = state.state_vector
+    # For pure states: C = 2|a*d - b*c|
+    a, b, c, d = state_vector
+    concurrence = 2 * abs(a * d - b * c)
     
-    # For computational basis |00⟩, |01⟩, |10⟩, |11⟩
-    # Extract amplitudes
-    a00, a01, a10, a11 = psi[0], psi[1], psi[2], psi[3]
-    
-    # Concurrence formula for pure states
-    concurrence = 2 * np.abs(a00 * a11 - a01 * a10)
-    
-    return np.real(concurrence)
+    return float(min(concurrence, 1.0))
 
 
-def measure_entanglement_entropy(state: QuantumState) -> dict:
+def measure_entanglement_entropy(state_vector: np.ndarray) -> dict:
     """
-    Comprehensive entanglement analysis.
+    Comprehensive entanglement analysis for 2-qubit systems.
     
+    Args:
+        state_vector: State vector of the 2-qubit system
+        
     Returns:
-        Dictionary with:
-        - 'is_entangled': bool
-        - 'entropy': float (Von Neumann entropy)
-        - 'concurrence': float
-        - 'classification': str ('separable', 'partially entangled', 'maximally entangled')
+        Dictionary with entanglement metrics
     """
-    # Verificar si está entrelazado
-    entangled = is_entangled(state)
+    entropy = von_neumann_entropy(state_vector)
+    concurrence_value = calculate_concurrence(state_vector)
+    is_entangled_state = is_entangled(state_vector)
     
-    # Calcular concurrencia
-    conc = calculate_concurrence(state)
-    
-    # Calcular entropía
-    rho = calculate_density_matrix(state)
-    rho_reduced = partial_trace(rho, keep_qubit=0, num_qubits=2)
-    entropy = von_neumann_entropy(rho_reduced)
-    
-    # Clasificar según concurrencia
-    if conc < 0.1:
-        classification = 'separable'
-    elif conc < 0.9:
-        classification = 'partially entangled'
+    # Classify entanglement
+    if not is_entangled_state:
+        classification = "separable"
+    elif concurrence_value > 0.99:
+        classification = "maximally entangled"
+    elif concurrence_value > 0.7:
+        classification = "highly entangled"
+    elif concurrence_value > 0.3:
+        classification = "moderately entangled"
     else:
-        classification = 'maximally entangled'
+        classification = "weakly entangled"
     
     return {
-        'is_entangled': entangled,
-        'entropy': entropy,
-        'concurrence': conc,
+        'is_entangled': bool(is_entangled_state),
+        'entropy': float(entropy),
+        'concurrence': float(concurrence_value),
         'classification': classification
     }

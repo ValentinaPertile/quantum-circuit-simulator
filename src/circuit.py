@@ -174,8 +174,8 @@ class QuantumCircuit:
         if self.num_qubits != 2:
             raise ValueError("Entanglement check only implemented for 2-qubit systems")
         
-        from src.entanglement import is_entangled
-        return is_entangled(self.state.state_vector)
+        from src.entanglement import is_entangled as check_entangled
+        return check_entangled(self.state.state_vector)
     
     def analyze_entanglement(self):
         """Perform comprehensive entanglement analysis (only for 2-qubit systems)."""

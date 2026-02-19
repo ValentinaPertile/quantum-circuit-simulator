@@ -58,7 +58,15 @@ function AmplitudeBar({ state, probability }) {
 }
 
 function EntanglementInfo({ data }) {
-  const { is_entangled, classification, concurrence, entropy } = data
+  // Validar que data tenga todos los campos necesarios
+  if (!data || typeof data !== 'object') {
+    return <div className="circuit-empty">Error loading entanglement data</div>
+  }
+
+  const is_entangled = data.is_entangled ?? false
+  const classification = data.classification ?? 'unknown'
+  const concurrence = data.concurrence ?? 0
+  const entropy = data.entropy ?? 0
 
   return (
     <>
@@ -77,7 +85,7 @@ function EntanglementInfo({ data }) {
 function MetricRow({ label, value }) {
   return (
     <div className="metric-row">
-      <span class="metric-label">{label}:</span>
+      <span className="metric-label">{label}:</span>
       <span className="metric-value">{value}</span>
     </div>
   )
