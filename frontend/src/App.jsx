@@ -142,31 +142,39 @@ const handleNumQubitsChange = (newNumQubits) => {
               initialState={initialState}
               onInitialStateChange={setInitialState}
             />
-          </div>
+          </div>  
 
-          <div className="column">
-            <CircuitVisualizer 
-              numQubits={numQubits}
-              operations={operations}
-            />
-            <OperationsList 
-                results={results} 
-                numQubits={numQubits}
-                operations={operations}
-                initialState={initialState}
-            />
-          </div>
-
-          <div className="column">
-            <Results results={results} numQubits={numQubits} />
-          </div>
+        <div className="column">
+          <CircuitVisualizer 
+            numQubits={numQubits}
+            operations={operations}
+          />
+          <OperationsList 
+            operations={operations}
+            onRemove={removeOperation}
+            onClear={clearCircuit}
+            onSimulate={setResults}
+            onShowCode={handleShowCode}
+            numQubits={numQubits}
+            initialState={initialState}
+          />
         </div>
-      ) : (
-        <CodeEditor 
-          operations={operations}
-          numQubits={numQubits}
-        />
-      )}
+
+        <div className="column">
+          <Results 
+            results={results} 
+            numQubits={numQubits}
+            operations={operations}
+            initialState={initialState}
+          />
+        </div>
+      </div>
+    ) : (
+      <CodeEditor 
+        operations={operations}
+        numQubits={numQubits}
+      />
+)}
     </div>
   )
 }
