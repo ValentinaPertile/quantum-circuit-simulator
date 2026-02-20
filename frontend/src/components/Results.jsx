@@ -9,10 +9,6 @@ function Results({ results, numQubits, operations, initialState }) {
           <div className="circuit-empty">Run simulation to see circuit notation</div>
         </div>
         <div className="card">
-          <h2 className="card-title">State Vector</h2>
-          <div className="circuit-empty">Run simulation to see results</div>
-        </div>
-        <div className="card">
           <h2 className="card-title">Quantum State</h2>
           <div className="circuit-empty">Run simulation to see results</div>
         </div>
@@ -35,11 +31,6 @@ function Results({ results, numQubits, operations, initialState }) {
           initialState={initialState || '0'.repeat(numQubits)}
           finalAmplitudes={amplitudes}
         />
-      </div>
-
-      <div className="card">
-        <h2 className="card-title">State Vector</h2>
-        <StateVectorNotation amplitudes={amplitudes} />
       </div>
 
       <div className="card">
@@ -118,65 +109,6 @@ function CircuitNotation({ operations, initialState, finalAmplitudes }) {
         }}
       >
         Copy Circuit Notation
-      </button>
-    </div>
-  )
-}
-
-function StateVectorNotation({ amplitudes }) {
-  if (!amplitudes) {
-    return <div className="circuit-empty">No amplitude data</div>
-  }
-
-  const terms = []
-  
-  for (const [state, amp] of Object.entries(amplitudes)) {
-    const magnitude = Math.sqrt(amp.real * amp.real + amp.imag * amp.imag)
-    
-    if (magnitude > 0.001) {
-      let coefficient = ''
-      
-      if (Math.abs(magnitude - 1) < 0.001) {
-        coefficient = amp.real < 0 ? '-' : ''
-      } else {
-        coefficient = magnitude.toFixed(4)
-        if (amp.real < 0) coefficient = '-' + coefficient
-      }
-      
-      terms.push({ coefficient, state, magnitude })
-    }
-  }
-
-  if (terms.length === 0) {
-    return (
-      <div className="state-vector-container">
-        <div className="state-notation">|ψ⟩ = 0</div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="state-vector-container">
-      <div className="state-notation">
-        <span className="psi">|ψ⟩ = </span>
-        {terms.map((term, idx) => (
-          <span key={idx}>
-            {idx > 0 && <span className="operator"> + </span>}
-            <span className="coefficient">{term.coefficient}</span>
-            <span className="ket">|{term.state}⟩</span>
-          </span>
-        ))}
-      </div>
-      <button 
-        className="btn btn-secondary" 
-        style={{ marginTop: '1rem', width: '100%', fontSize: '0.85rem' }}
-        onClick={() => {
-          const text = document.querySelector('.state-notation').textContent
-          navigator.clipboard.writeText(text)
-          alert('State notation copied to clipboard!')
-        }}
-      >
-        Copy Notation
       </button>
     </div>
   )
