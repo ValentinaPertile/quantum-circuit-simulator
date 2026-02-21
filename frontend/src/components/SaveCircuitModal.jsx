@@ -14,13 +14,20 @@ function SaveCircuitModal({ onSave, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+      <div className="modal-content save-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">Save Circuit</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
-        <div style={{ padding: '1.5rem' }}>
+        <div className="modal-body">
+          <p style={{ 
+            color: 'var(--text-secondary)', 
+            marginBottom: '1.5rem',
+            lineHeight: '1.6'
+          }}>
+            Give your quantum circuit a name to save it to your local browser storage.
+          </p>
           <div className="input-group">
             <label className="input-label">Circuit Name</label>
             <input
@@ -41,7 +48,7 @@ function SaveCircuitModal({ onSave, onClose }) {
             Cancel
           </button>
           <button className="btn btn-primary" onClick={handleSave}>
-            Save Circuit
+             Save Circuit
           </button>
         </div>
       </div>
