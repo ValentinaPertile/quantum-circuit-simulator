@@ -297,7 +297,7 @@ function App() {
               disabled={historyIndex >= history.length - 1}
               title="Redo (Ctrl+Y)"
             >
-              ↷ Redo
+              Redo
             </button>
           </div>
         </div>
