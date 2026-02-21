@@ -6,6 +6,9 @@ import CircuitVisualizer from './components/CircuitVisualizer'
 import OperationsList from './components/OperationsList'
 import Results from './components/Results'
 import CodeEditor from './components/CodeEditor'
+import SaveCircuitModal from './components/SaveCircuitModal'
+import LoadCircuitModal from './components/LoadCircuitModal'
+import { saveCircuit, importCircuit } from './utils/circuitStorage'
 import './App.css'
 
 function App() {
@@ -17,6 +20,10 @@ function App() {
   const [operations, setOperations] = useState([])
   const [results, setResults] = useState(null)
   const [theme, setTheme] = useState('light')
+  
+  // Modal states
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [showLoadModal, setShowLoadModal] = useState(false)
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light'
@@ -44,38 +51,36 @@ function App() {
     setResults(null)
   }
 
-  
-const handleNumQubitsChange = (newNumQubits) => {
-  const oldNumQubits = numQubits
-  
-  const wouldLoseOperations = operations.some(op => {
-    if (op.target !== undefined && op.target >= newNumQubits) return true
-    if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return true
-    return false
-  })
-  
-  if (wouldLoseOperations && operations.length > 0) {
-    const confirmed = window.confirm(
-      `Changing the number of qubits will remove some operations that reference non-existent qubits. Continue?`
-    )
-    if (!confirmed) {
-      return 
+  const handleNumQubitsChange = (newNumQubits) => {
+    // Check if there are operations that would become invalid
+    const wouldLoseOperations = operations.some(op => {
+      if (op.target !== undefined && op.target >= newNumQubits) return true
+      if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return true
+      return false
+    })
+    
+    if (wouldLoseOperations && operations.length > 0) {
+      const confirmed = window.confirm(
+        'Changing the number of qubits will remove some operations that reference non-existent qubits. Continue?'
+      )
+      if (!confirmed) {
+        return
+      }
     }
+    
+    setNumQubits(newNumQubits)
+    setInitialState('0'.repeat(newNumQubits))
+    
+    // Filter valid operations
+    const validOperations = operations.filter(op => {
+      if (op.target !== undefined && op.target >= newNumQubits) return false
+      if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return false
+      return true
+    })
+    
+    setOperations(validOperations)
+    setResults(null)
   }
-  
-  setNumQubits(newNumQubits)
-  setInitialState('0'.repeat(newNumQubits))
-  
-  // Filtrar operaciones válidas
-  const validOperations = operations.filter(op => {
-    if (op.target !== undefined && op.target >= newNumQubits) return false
-    if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return false
-    return true
-  })
-  
-  setOperations(validOperations)
-  setResults(null)
-}
 
   const loadPreset = (preset) => {
     if (preset === 'bell') {
@@ -100,6 +105,59 @@ const handleNumQubitsChange = (newNumQubits) => {
   const handleShowCode = () => {
     setShowCodeTab(true)
     setActiveTab('code')
+  }
+
+  // Save circuit handler
+  const handleSaveCircuit = (circuitName) => {
+    if (operations.length === 0) {
+      alert('Cannot save empty circuit')
+      return
+    }
+
+    const circuit = {
+      name: circuitName,
+      numQubits: numQubits,
+      initialState: initialState,
+      operations: operations
+    }
+
+    saveCircuit(circuit)
+    alert(`Circuit "${circuitName}" saved successfully!`)
+  }
+
+  // Load circuit handler
+  const handleLoadCircuit = (circuit) => {
+    setNumQubits(circuit.numQubits)
+    setInitialState(circuit.initialState)
+    setOperations(circuit.operations)
+    setResults(null)
+    alert(`Circuit "${circuit.name}" loaded successfully!`)
+  }
+
+  // Import circuit handler
+  const handleImportCircuit = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    try {
+      const circuit = await importCircuit(file)
+      
+      // Validate circuit structure
+      if (!circuit.numQubits || !circuit.operations) {
+        throw new Error('Invalid circuit file format')
+      }
+
+      setNumQubits(circuit.numQubits)
+      setInitialState(circuit.initialState || '0'.repeat(circuit.numQubits))
+      setOperations(circuit.operations)
+      setResults(null)
+      alert('Circuit imported successfully!')
+    } catch (error) {
+      alert(`Failed to import circuit: ${error.message}`)
+    }
+
+    // Reset file input
+    event.target.value = ''
   }
 
   if (showLanding) {
@@ -131,6 +189,34 @@ const handleNumQubitsChange = (newNumQubits) => {
         </div>
       )}
 
+      {/* Storage toolbar */}
+      {activeTab === 'circuit' && (
+        <div className="storage-toolbar">
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowSaveModal(true)}
+            disabled={operations.length === 0}
+          >
+             Save Circuit
+          </button>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowLoadModal(true)}
+          >
+             Load Circuit
+          </button>
+          <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+             Import
+            <input 
+              type="file" 
+              accept=".json"
+              onChange={handleImportCircuit}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
+      )}
+
       {activeTab === 'circuit' ? (
         <div className="main-grid">
           <div className="column">
@@ -142,39 +228,54 @@ const handleNumQubitsChange = (newNumQubits) => {
               initialState={initialState}
               onInitialStateChange={setInitialState}
             />
-          </div>  
+          </div>
 
-        <div className="column">
-          <CircuitVisualizer 
-            numQubits={numQubits}
-            operations={operations}
-          />
-          <OperationsList 
-            operations={operations}
-            onRemove={removeOperation}
-            onClear={clearCircuit}
-            onSimulate={setResults}
-            onShowCode={handleShowCode}
-            numQubits={numQubits}
-            initialState={initialState}
-          />
-        </div>
+          <div className="column">
+            <CircuitVisualizer 
+              numQubits={numQubits}
+              operations={operations}
+            />
+            <OperationsList 
+              operations={operations}
+              onRemove={removeOperation}
+              onClear={clearCircuit}
+              onSimulate={setResults}
+              onShowCode={handleShowCode}
+              numQubits={numQubits}
+              initialState={initialState}
+            />
+          </div>
 
-        <div className="column">
-          <Results 
-            results={results} 
-            numQubits={numQubits}
-            operations={operations}
-            initialState={initialState}
-          />
+          <div className="column">
+            <Results 
+              results={results} 
+              numQubits={numQubits}
+              operations={operations}
+              initialState={initialState}
+            />
+          </div>
         </div>
-      </div>
-    ) : (
-      <CodeEditor 
-        operations={operations}
-        numQubits={numQubits}
-      />
-)}
+      ) : (
+        <CodeEditor 
+          operations={operations}
+          numQubits={numQubits}
+        />
+      )}
+
+      {/* Modals */}
+      {showSaveModal && (
+        <SaveCircuitModal 
+          onSave={handleSaveCircuit}
+          onClose={() => setShowSaveModal(false)}
+        />
+      )}
+
+      {showLoadModal && (
+        <LoadCircuitModal 
+          onLoad={handleLoadCircuit}
+          onClose={() => setShowLoadModal(false)}
+        />
+      )}
     </div>
   )
 }

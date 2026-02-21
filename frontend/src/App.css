@@ -1028,3 +1028,97 @@
         flex-direction: column;
     }
 }
+
+/* ===== MODAL FOOTER ===== */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem 2rem;
+    border-top: 2px solid var(--beige-300);
+    background: var(--beige-200);
+}
+
+/* ===== SAVED CIRCUITS LIST ===== */
+.saved-circuits-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.saved-circuit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    background: var(--beige-100);
+    border: 2px solid var(--beige-300);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.saved-circuit-item:hover {
+    border-color: var(--moss-green-light);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.saved-circuit-info {
+    flex: 1;
+}
+
+.saved-circuit-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--moss-green-dark);
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+
+.saved-circuit-name:hover {
+    color: var(--moss-green);
+}
+
+.saved-circuit-details {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.saved-circuit-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+[data-theme="dark"] .saved-circuit-item {
+    background: var(--beige-200);
+}
+
+[data-theme="dark"] .modal-footer {
+    background: var(--beige-300);
+}
+
+/* ===== STORAGE TOOLBAR ===== */
+.storage-toolbar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--white);
+    border: 2px solid var(--beige-300);
+    border-radius: 12px;
+}
+
+.storage-toolbar .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.storage-toolbar .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+[data-theme="dark"] .storage-toolbar {
+    background: var(--beige-200);
+}
