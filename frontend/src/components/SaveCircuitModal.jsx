@@ -48,7 +48,7 @@ function SaveCircuitModal({ onSave, onClose }) {
             Cancel
           </button>
           <button className="btn btn-primary" onClick={handleSave}>
-            💾 Save Circuit
+             Save Circuit
           </button>
         </div>
       </div>
