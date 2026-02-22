@@ -1,23 +1,42 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { simulateCircuit } from '../utils/api'
 
-function OperationsList({ operations, onRemove, onClear, onSimulate, onShowCode, numQubits, initialState }) {
-    const handleSimulate = async () => {
+function OperationsList({ operations, onRemove, onReorder, onClear, onSimulate, numQubits, initialState }) {
+  const [draggedIndex, setDraggedIndex] = useState(null)
+
+  const handleSimulate = async () => {
     if (operations.length === 0) {
-        alert('Add some gates first!')
-        return
+      alert('Add some gates first!')
+      return
     }
 
     try {
-    const data = await simulateCircuit(numQubits, operations, initialState)  // AGREGADO initialState
-    onSimulate(data)
+      const data = await simulateCircuit(numQubits, operations, initialState)
+      onSimulate(data)
     } catch (error) {
-        alert('Failed to connect to backend. Make sure the Python server is running.')
-        console.error(error)
-        } 
+      alert('Failed to connect to backend. Make sure the Python server is running.')
+      console.error(error)
     }
+  }
 
-    return (
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === index) return
+
+    onReorder(draggedIndex, index)
+    setDraggedIndex(index)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+  }
+
+  return (
     <div className="card">
       <div className="operations-header">
         <h2 className="card-title" style={{ marginBottom: 0 }}>Operations</h2>
@@ -35,6 +54,10 @@ function OperationsList({ operations, onRemove, onClear, onSimulate, onShowCode,
               operation={op}
               index={idx}
               onRemove={onRemove}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              isDragging={draggedIndex === idx}
             />
           ))
         )}
@@ -42,18 +65,11 @@ function OperationsList({ operations, onRemove, onClear, onSimulate, onShowCode,
       <button className="btn btn-primary btn-block" onClick={handleSimulate}>
         Run Simulation
       </button>
-      <button 
-        className="btn btn-secondary btn-block" 
-        onClick={onShowCode}
-        style={{ marginTop: '0.8rem' }}
-      >
-        View Python Code
-      </button>
     </div>
   )
 }
 
-function OperationItem({ operation, index, onRemove }) {
+function OperationItem({ operation, index, onRemove, onDragStart, onDragOver, onDragEnd, isDragging }) {
   const { gate, target, control } = operation
   
   let displayName = ''
@@ -61,7 +77,7 @@ function OperationItem({ operation, index, onRemove }) {
   
   if (gate === 'cnot') {
     displayName = 'CNOT'
-    details = `CNOT gate: control q${control} → target q${target}`
+    details = `CNOT gate: control q${control} to target q${target}`
   } else if (gate === 'measure') {
     displayName = 'M'
     details = `Measurement on qubit ${target}`
@@ -83,7 +99,14 @@ function OperationItem({ operation, index, onRemove }) {
   }
 
   return (
-    <div className="operation-item">
+    <div 
+      className={`operation-item ${isDragging ? 'dragging' : ''}`}
+      draggable
+      onDragStart={(e) => onDragStart(e, index)}
+      onDragOver={(e) => onDragOver(e, index)}
+      onDragEnd={onDragEnd}
+    >
+      <div className="drag-handle">⋮⋮</div>
       <div className="operation-info">
         <span className="operation-badge">
           {displayName}

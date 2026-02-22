@@ -1354,3 +1354,326 @@
 [data-theme="dark"] .storage-toolbar {
     background: var(--beige-200);
 }
+
+/* ===== STEP BY STEP STYLES ===== */
+.step-by-step-container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.step-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    background: var(--white);
+    border: 2px solid var(--beige-300);
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.step-indicator {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--moss-green-dark);
+    min-width: 150px;
+    text-align: center;
+}
+
+.step-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.step-left,
+.step-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.current-operation {
+    padding: 1rem;
+}
+
+.operation-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.operation-badge-large {
+    background: var(--moss-green);
+    color: var(--white);
+    padding: 1.5rem 3rem;
+    border-radius: 12px;
+    font-size: 2rem;
+    font-weight: 700;
+    min-width: 120px;
+    text-align: center;
+}
+
+.operation-description {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Timeline */
+.step-timeline {
+    background: var(--white);
+    border: 2px solid var(--beige-300);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.timeline-track {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.timeline-track::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--beige-300);
+    transform: translateY(-50%);
+}
+
+.timeline-point {
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timeline-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--beige-300);
+    border: 3px solid var(--white);
+    transition: all 0.3s;
+}
+
+.timeline-point:hover .timeline-dot {
+    transform: scale(1.3);
+}
+
+.timeline-point.active .timeline-dot {
+    background: var(--moss-green);
+    transform: scale(1.5);
+}
+
+.timeline-point.completed .timeline-dot {
+    background: var(--moss-green-light);
+}
+
+.timeline-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.timeline-point.active .timeline-label {
+    color: var(--moss-green-dark);
+    font-size: 0.85rem;
+}
+
+/* Loading and error states */
+.loading-state,
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--beige-300);
+    border-top-color: var(--moss-green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-state p,
+.error-state p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.error-state h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+/* ===== BLOCH SPHERE STYLES ===== */
+.bloch-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.bloch-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.bloch-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.bloch-canvas {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    margin: 0 auto;
+    cursor: grab;
+    border: 2px solid var(--beige-300);
+    border-radius: 8px;
+}
+
+.bloch-canvas:active {
+    cursor: grabbing;
+}
+
+.bloch-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.state-info-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem;
+    background: var(--beige-100);
+    border-radius: 6px;
+    border: 1px solid var(--beige-300);
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.info-value {
+    font-family: 'Courier New', monospace;
+    color: var(--moss-green-dark);
+    font-weight: 600;
+}
+
+/* ===== DARK MODE ===== */
+[data-theme="dark"] .step-controls,
+[data-theme="dark"] .step-timeline {
+    background: var(--beige-200);
+}
+
+[data-theme="dark"] .operation-badge-large {
+    background: var(--moss-green-dark);
+    color: var(--beige-100);
+}
+
+[data-theme="dark"] .timeline-dot {
+    border-color: var(--beige-200);
+}
+
+[data-theme="dark"] .bloch-canvas {
+    background: var(--beige-100);
+}
+
+[data-theme="dark"] .info-item {
+    background: var(--beige-300);
+}
+
+/* ===== DISABLED TABS ===== */
+.nav-tab:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.nav-tab:disabled:hover {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .step-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .bloch-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .step-controls {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .timeline-track {
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+    
+    .timeline-label {
+        font-size: 0.65rem;
+    }
+}
+
+/* ===== DRAG AND DROP ===== */
+.operation-item {
+    cursor: move;
+}
+
+.operation-item.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+}
+
+.drag-handle {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: grab;
+    padding: 0 0.5rem;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.operation-item:hover .drag-handle {
+    color: var(--moss-green);
+}
