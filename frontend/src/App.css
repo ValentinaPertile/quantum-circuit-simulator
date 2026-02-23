@@ -1607,3 +1607,29 @@
 .operation-item:hover .drag-handle {
     color: var(--moss-green);
 }
+
+/* ===== UPDATE FEATURE CARDS GRID ===== */
+.landing-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+.feature-card {
+    background: var(--white);
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    border: 2px solid var(--beige-300);
+    transition: all 0.3s ease;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-card p {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
