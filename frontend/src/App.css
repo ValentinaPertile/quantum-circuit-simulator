@@ -1,3 +1,27 @@
+/* ===== GLOBAL RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--beige-100);
+    color: var(--text-primary);
+}
+
+#root {
+    min-height: 100vh;
+    width: 100%;
+}
+
 /* ===== CSS VARIABLES - Beige & Moss Green Theme ===== */
 :root {
     --beige-100: #f5f1e8;
@@ -189,8 +213,9 @@
 /* ===== LAYOUT ===== */
 .app {
     min-height: 100vh;
-    background-color: var(--beige-100);
-    padding: 2rem;
+    width: 100%;
+    background: var(--beige-100);
+    padding-bottom: 2rem;
 }
 
 .container {
@@ -416,12 +441,18 @@
 }
 
 /* ===== CARD ===== */
+/* ===== CARDS ===== */
 .card {
     background: var(--white);
     border: 2px solid var(--beige-300);
     border-radius: 12px;
     padding: 1.5rem;
-    transition: all 0.3s;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.3s ease;
+    width: 100%;
+    min-height: fit-content;
+    height: auto;
+    overflow: visible;
 }
 
 .card:hover {
@@ -924,8 +955,74 @@
     padding: 1.5rem;
     border-radius: 8px;
     border: 2px solid var(--beige-300);
+    width: 100%;
+    overflow-x: auto;
 }
 
+@media (max-width: 768px) {
+    .circuit-notation-container {
+        padding: 1rem;
+        overflow-x: auto;
+    }
+
+    .circuit-flow {
+        white-space: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .circuit-expansion {
+        margin-top: 1rem;
+    }
+
+    .expansion-content {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+}
+
+
+/* ===== OVERFLOW HANDLING ===== */
+.card {
+    overflow: visible;
+}
+
+.card > * {
+    max-width: 100%;
+}
+
+/* Para elementos que necesitan scroll horizontal */
+.circuit-display,
+.circuit-flow,
+.code-editable,
+.python-code {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Scrollbar styling para móvil */
+@media (max-width: 768px) {
+    ::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--beige-200);
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--moss-green-light);
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--moss-green);
+    }
+}
 .circuit-flow {
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 1rem;
@@ -1004,6 +1101,7 @@
     .main-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+        align-items: start;
     }
 
     .step-content {
@@ -1023,10 +1121,19 @@
         flex-wrap: wrap;
         gap: 0.8rem;
     }
+
+    .landing-features {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* Tablets pequeños y móviles grandes (max 768px) */
 @media (max-width: 768px) {
+    /* Global */
+    body {
+        font-size: 14px;
+    }
+
     /* Header */
     .header {
         padding: 1rem;
@@ -1078,12 +1185,24 @@
 
     /* Main grid */
     .main-grid {
+        grid-template-columns: 1fr;
         padding: 1rem;
+        gap: 1rem;
+        min-height: auto;
+    }
+
+    .column {
+        width: 100%;
+        max-width: 100%;
     }
 
     /* Cards */
     .card {
         padding: 1rem;
+        width: 100%;
+        height: auto;
+        min-height: fit-content;
+        overflow: visible;
     }
 
     .card-title {
@@ -1120,12 +1239,45 @@
         width: 100%;
     }
 
+    .input-group {
+        margin-bottom: 1rem;
+    }
+
+    .input-label {
+        font-size: 0.9rem;
+    }
+
+    .input-select {
+        width: 100%;
+    }
+
+    /* Presets */
+    .presets-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
     /* Circuit visualizer */
     .circuit-display {
+        min-height: 250px;
+        height: auto;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .circuit-display svg {
+        width: 100%;
+        height: auto;
         min-height: 250px;
     }
 
     /* Operations list */
+    .operations-list {
+        max-height: none;
+        overflow-y: visible;
+    }
+
     .operation-item {
         flex-wrap: wrap;
         padding: 0.8rem;
@@ -1139,18 +1291,33 @@
 
     .operation-details {
         font-size: 0.8rem;
+        flex: 1;
     }
 
     .drag-handle {
         font-size: 1rem;
     }
 
+    .operation-remove {
+        font-size: 1.5rem;
+    }
+
     /* Results */
     .amplitude-item {
         padding: 0.6rem;
+        width: 100%;
     }
 
     .amplitude-state {
+        font-size: 0.9rem;
+    }
+
+    .amplitude-probability {
+        font-size: 0.9rem;
+    }
+
+    .entanglement-status {
+        padding: 1rem;
         font-size: 0.9rem;
     }
 
@@ -1164,6 +1331,47 @@
         align-items: flex-start;
     }
 
+    .metric-label,
+    .metric-value {
+        font-size: 0.9rem;
+    }
+
+    /* Circuit Notation */
+    .circuit-notation-container {
+        padding: 1rem;
+        overflow-x: auto;
+    }
+
+    .circuit-flow {
+        white-space: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .gate-notation {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.6rem;
+    }
+
+    .circuit-expansion {
+        margin-top: 1rem;
+    }
+
+    .expansion-content {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        font-size: 0.9rem;
+    }
+
+    /* State notation */
+    .state-notation {
+        font-size: 0.95rem;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
     /* Step by step */
     .step-controls {
         flex-wrap: wrap;
@@ -1175,6 +1383,7 @@
         flex: 1 1 40%;
         min-width: 100px;
         padding: 0.8rem 1rem;
+        font-size: 0.85rem;
     }
 
     .step-indicator {
@@ -1182,9 +1391,28 @@
         font-size: 1rem;
     }
 
+    .step-content {
+        padding: 0;
+    }
+
+    .step-left,
+    .step-right {
+        gap: 1rem;
+    }
+
+    .operation-badge-large {
+        font-size: 1.5rem;
+        padding: 1rem 2rem;
+    }
+
+    .operation-description {
+        font-size: 0.9rem;
+    }
+
     /* Bloch sphere */
     .bloch-content-3d {
         padding: 1rem;
+        gap: 1rem;
     }
 
     .bloch-canvas-3d {
@@ -1202,6 +1430,14 @@
         font-size: 0.85rem;
     }
 
+    .info-label {
+        font-size: 0.85rem;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+    }
+
     /* Code editor */
     .code-controls {
         flex-wrap: wrap;
@@ -1211,11 +1447,19 @@
     .code-controls .btn {
         flex: 1 1 45%;
         min-width: 120px;
+        font-size: 0.85rem;
     }
 
     .format-selector {
         width: 100%;
         margin-bottom: 0.5rem;
+    }
+
+    .code-editable,
+    .python-code {
+        font-size: 0.8rem;
+        padding: 0.8rem;
+        max-height: 400px;
     }
 
     /* Landing page */
@@ -1249,6 +1493,15 @@
         font-size: 1.1rem;
     }
 
+    .feature-card p {
+        font-size: 0.9rem;
+    }
+
+    .landing-info {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
     .btn-start {
         width: 100%;
         font-size: 1rem;
@@ -1273,6 +1526,12 @@
         font-size: 1.2rem;
     }
 
+    .modal-close {
+        width: 35px;
+        height: 35px;
+        font-size: 1.5rem;
+    }
+
     .modal-body {
         padding: 1rem;
     }
@@ -1287,12 +1546,34 @@
         flex: 1 1 45%;
     }
 
+    /* Saved circuits */
+    .saved-circuits-container {
+        max-height: 60vh;
+    }
+
     .saved-circuit-card {
         padding: 1rem;
     }
 
     .circuit-card-name {
         font-size: 1.1rem;
+    }
+
+    .circuit-card-info {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .info-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+    }
+
+    .info-date {
+        font-size: 0.75rem;
+        width: 100%;
+        margin-left: 0;
+        margin-top: 0.5rem;
     }
 
     .circuit-card-actions {
@@ -1302,110 +1583,36 @@
 
     .circuit-card-actions .btn {
         flex: 1 1 45%;
-    }
-}
-
-/* Móviles pequeños (max 480px) */
-@media (max-width: 480px) {
-    /* Header */
-    .header-title h1 {
-        font-size: 1.2rem;
+        font-size: 0.8rem;
     }
 
-    .header-subtitle {
-        font-size: 0.75rem;
-    }
-
-    .theme-toggle {
-        font-size: 0.85rem;
+    .btn-small {
         padding: 0.4rem 0.8rem;
     }
 
-    /* Navigation */
-    .nav-tab {
-        flex: 1 1 100%;
-        font-size: 0.8rem;
-        padding: 0.7rem 0.5rem;
+    /* Empty states */
+    .empty-state {
+        padding: 2rem 1rem;
     }
 
-    /* Cards */
-    .card {
-        padding: 0.8rem;
+    .empty-icon {
+        font-size: 3rem;
     }
 
-    .card-title {
-        font-size: 1.1rem;
-    }
-
-    /* Gate selector */
-    .gates-grid {
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
-    }
-
-    .gate-btn {
-        padding: 1rem;
-        font-size: 1rem;
-    }
-
-    .gate-btn.measurement {
-        grid-column: span 1;
-    }
-
-    /* Buttons */
-    .btn {
-        font-size: 0.85rem;
-        padding: 0.6rem 1rem;
-    }
-
-    .btn-block {
-        width: 100%;
-    }
-
-    /* Step controls */
-    .step-controls .btn {
-        flex: 1 1 100%;
-        font-size: 0.85rem;
-    }
-
-    /* Bloch sphere */
-    .bloch-canvas-3d {
-        height: 300px !important;
-    }
-
-    /* Landing page */
-    .landing-title {
-        font-size: 1.5rem;
-    }
-
-    .landing-subtitle {
+    .circuit-empty {
+        padding: 1.5rem 1rem;
         font-size: 0.9rem;
     }
+}
 
-    .btn-start {
-        font-size: 0.9rem;
-        padding: 0.9rem 1.5rem;
-    }
+/* ===== LOADING STATE FOR BUTTONS ===== */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 
-    /* Operations */
-    .operation-badge {
-        min-width: 50px;
-        font-size: 0.7rem;
-    }
-
-    .operation-details {
-        font-size: 0.75rem;
-    }
-
-    /* Circuit notation */
-    .circuit-flow {
-        font-size: 0.85rem;
-    }
-
-    .gate-notation {
-        font-size: 0.75rem;
-        padding: 0.2rem 0.5rem;
-    }
+.btn-primary:disabled {
+    background: var(--moss-green-light);
 }
 
 /* Landscape móvil */

@@ -3,6 +3,7 @@ import { simulateCircuit } from '../utils/api'
 
 function OperationsList({ operations, onRemove, onReorder, onClear, onSimulate, numQubits, initialState }) {
   const [draggedIndex, setDraggedIndex] = useState(null)
+  const [isSimulating, setIsSimulating] = useState(false)
 
   const handleSimulate = async () => {
     if (operations.length === 0) {
@@ -10,12 +11,15 @@ function OperationsList({ operations, onRemove, onReorder, onClear, onSimulate, 
       return
     }
 
+    setIsSimulating(true)
     try {
       const data = await simulateCircuit(numQubits, operations, initialState)
       onSimulate(data)
     } catch (error) {
       alert('Failed to connect to backend. Make sure the Python server is running.')
       console.error(error)
+    } finally {
+      setIsSimulating(false)
     }
   }
 
@@ -62,8 +66,12 @@ function OperationsList({ operations, onRemove, onReorder, onClear, onSimulate, 
           ))
         )}
       </div>
-      <button className="btn btn-primary btn-block" onClick={handleSimulate}>
-        Run Simulation
+      <button 
+        className="btn btn-primary btn-block" 
+        onClick={handleSimulate}
+        disabled={isSimulating}
+      >
+        {isSimulating ? 'Simulating...' : 'Run Simulation'}
       </button>
     </div>
   )
