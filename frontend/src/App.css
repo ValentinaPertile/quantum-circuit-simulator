@@ -1459,35 +1459,35 @@
     margin-bottom: 0.5rem;
 }
 
-/* ===== BLOCH SPHERE STYLES ===== */
+/* ===== BLOCH SPHERE 3D STYLES ===== */
 .bloch-container {
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 
-.bloch-content {
+.bloch-content-3d {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1.5fr 1fr;
     gap: 2rem;
 }
 
-.bloch-card {
+.bloch-card-3d {
     display: flex;
     flex-direction: column;
 }
-
-.bloch-canvas {
+.bloch-canvas-3d {
     width: 100%;
-    height: auto;
-    max-width: 600px;
-    margin: 0 auto;
-    cursor: grab;
+    height: 600px;
     border: 2px solid var(--beige-300);
     border-radius: 8px;
+    overflow: hidden;
+    background: var(--beige-100);
 }
 
-.bloch-canvas:active {
-    cursor: grabbing;
+.bloch-canvas-3d canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .bloch-info {
@@ -1521,27 +1521,56 @@
     font-weight: 600;
 }
 
+.controls-info {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.control-item {
+    padding: 0.8rem;
+    background: var(--beige-100);
+    border-radius: 6px;
+    border: 1px solid var(--beige-300);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.control-item strong {
+    color: var(--moss-green-dark);
+    margin-right: 0.5rem;
+}
+
 /* ===== DARK MODE ===== */
-[data-theme="dark"] .step-controls,
-[data-theme="dark"] .step-timeline {
-    background: var(--beige-200);
-}
-
-[data-theme="dark"] .operation-badge-large {
-    background: var(--moss-green-dark);
-    color: var(--beige-100);
-}
-
-[data-theme="dark"] .timeline-dot {
-    border-color: var(--beige-200);
-}
-
-[data-theme="dark"] .bloch-canvas {
+[data-theme="dark"] .bloch-canvas-3d {
     background: var(--beige-100);
 }
 
-[data-theme="dark"] .info-item {
+[data-theme="dark"] .info-item,
+[data-theme="dark"] .control-item {
     background: var(--beige-300);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .bloch-content-3d {
+        grid-template-columns: 1fr;
+    }
+}
+/* ===== DARK MODE ===== */
+[data-theme="dark"] .bloch-canvas-3d {
+    background: var(--beige-100);
+}
+
+[data-theme="dark"] .info-item,
+[data-theme="dark"] .control-item {
+    background: var(--beige-300);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .bloch-content-3d {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ===== DISABLED TABS ===== */

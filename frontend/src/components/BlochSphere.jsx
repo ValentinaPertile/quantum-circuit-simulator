@@ -1,23 +1,36 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { simulateCircuit } from '../utils/api'
+import * as THREE from 'three'
 
 function BlochSphere({ operations, initialState }) {
-  const canvasRef = useRef(null)
+  const containerRef = useRef(null)
+  const sceneRef = useRef(null)
+  const rendererRef = useRef(null)
+  const cameraRef = useRef(null)
   const [state, setState] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [rotation, setRotation] = useState({ theta: Math.PI / 4, phi: Math.PI / 4 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [lastMouse, setLastMouse] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     loadState()
   }, [operations, initialState])
 
   useEffect(() => {
-    if (state) {
-      drawBlochSphere()
+    if (containerRef.current && !sceneRef.current) {
+      initThreeJS()
     }
-  }, [state, rotation])
+    return () => {
+      if (rendererRef.current) {
+        containerRef.current?.removeChild(rendererRef.current.domElement)
+        rendererRef.current.dispose()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (state && sceneRef.current) {
+      updateBlochVector()
+    }
+  }, [state])
 
   const loadState = async () => {
     setLoading(true)
@@ -27,151 +40,124 @@ function BlochSphere({ operations, initialState }) {
         setState(result.amplitudes)
       }
     } catch (error) {
-      console.error('Failed to load state:', error)
+      console.error('Error loading state:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const drawBlochSphere = () => {
-    const canvas = canvasRef.current
-    if (!canvas || !state) return
+    const initThreeJS = () => {
+    const container = containerRef.current
+    if (!container) return
+    
+    const width = container.clientWidth || 800
+    const height = container.clientHeight || 600
+    
+    console.log('Container dimensions:', width, height)
 
-    const ctx = canvas.getContext('2d')
-    const width = canvas.width
-    const height = canvas.height
-    const centerX = width / 2
-    const centerY = height / 2
-    const radius = Math.min(width, height) * 0.35
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color('#f5f1e8')
+    sceneRef.current = scene
 
-    // Clear canvas
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--beige-100').trim()
-    ctx.fillRect(0, 0, width, height)
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
+    camera.position.set(4, 4, 6)
+    camera.lookAt(0, 0, 0)
+    cameraRef.current = camera
 
-    // Calculate Bloch vector from state
+    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setSize(width, height)
+    container.appendChild(renderer.domElement)
+    rendererRef.current = renderer
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    scene.add(ambientLight)
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    directionalLight.position.set(5, 5, 5)
+    scene.add(directionalLight)
+
+    const sphereGeometry = new THREE.SphereGeometry(2, 32, 32)
+    const sphereMaterial = new THREE.MeshBasicMaterial({
+      color: 0xddd5c3,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.3
+    })
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+    scene.add(sphere)
+
+    const axisLength = 2.5
+    const xAxis = createAxis(0xff6b6b, axisLength, 0, 0)
+    const yAxis = createAxis(0x6bff6b, 0, axisLength, 0)
+    const zAxis = createAxis(0x6b6bff, 0, 0, axisLength)
+    scene.add(xAxis, yAxis, zAxis)
+
+    const arrowGroup = new THREE.Group()
+    const arrowGeometry = new THREE.ConeGeometry(0.15, 0.4, 16)
+    const arrowMaterial = new THREE.MeshPhongMaterial({ color: 0x6b7f5f })
+    const arrowHead = new THREE.Mesh(arrowGeometry, arrowMaterial)
+    arrowHead.rotation.x = Math.PI / 2
+    arrowGroup.add(arrowHead)
+
+    const shaftGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 16)
+    const shaft = new THREE.Mesh(shaftGeometry, arrowMaterial)
+    shaft.rotation.x = Math.PI / 2
+    arrowGroup.add(shaft)
+
+    scene.add(arrowGroup)
+    scene.userData.arrow = arrowGroup
+
+    animate()
+  }
+
+  const createAxis = (color, x, y, z) => {
+    const material = new THREE.LineBasicMaterial({ color })
+    const points = [
+      new THREE.Vector3(-x, -y, -z),
+      new THREE.Vector3(x, y, z)
+    ]
+    const geometry = new THREE.BufferGeometry().setFromPoints(points)
+    return new THREE.Line(geometry, material)
+  }
+
+  const updateBlochVector = () => {
+    if (!state || !sceneRef.current) return
+
     const alpha = state['0']
     const beta = state['1']
-    
     const theta = 2 * Math.acos(Math.sqrt(alpha.probability))
     const phi = Math.atan2(beta.imag, beta.real)
 
-    // Draw sphere
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--beige-300').trim()
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
-    ctx.stroke()
+    const x = 2 * Math.sin(theta) * Math.cos(phi)
+    const y = 2 * Math.sin(theta) * Math.sin(phi)
+    const z = 2 * Math.cos(theta)
 
-    // Draw equator
-    ctx.setLineDash([5, 5])
-    ctx.beginPath()
-    ctx.ellipse(centerX, centerY, radius, radius * 0.3, 0, 0, 2 * Math.PI)
-    ctx.stroke()
-    ctx.setLineDash([])
+    const arrow = sceneRef.current.userData.arrow
+    if (arrow) {
+      arrow.position.set(0, 0, 0)
+      const direction = new THREE.Vector3(x, y, z).normalize()
+      const quaternion = new THREE.Quaternion()
+      quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction)
+      arrow.setRotationFromQuaternion(quaternion)
+      
+      const length = Math.sqrt(x * x + y * y + z * z)
+      arrow.children[1].scale.z = length
+      arrow.children[0].position.z = length
+    }
+  }
 
-    // Draw axes
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim()
-    ctx.lineWidth = 1
+  const animate = () => {
+    if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return
     
-    // X axis
-    ctx.beginPath()
-    ctx.moveTo(centerX - radius - 20, centerY)
-    ctx.lineTo(centerX + radius + 20, centerY)
-    ctx.stroke()
+    if (sceneRef.current.children[2]) {
+      sceneRef.current.children[2].rotation.y += 0.005
+    }
     
-    // Y axis  
-    ctx.beginPath()
-    ctx.moveTo(centerX, centerY - radius - 20)
-    ctx.lineTo(centerX, centerY + radius + 20)
-    ctx.stroke()
-
-    // Z axis (coming out)
-    ctx.beginPath()
-    ctx.moveTo(centerX - radius * 0.7, centerY + radius * 0.7)
-    ctx.lineTo(centerX + radius * 0.7, centerY - radius * 0.7)
-    ctx.stroke()
-
-    // Draw labels
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim()
-    ctx.font = '16px Georgia'
-    ctx.fillText('X', centerX + radius + 30, centerY + 5)
-    ctx.fillText('Y', centerX - 5, centerY - radius - 25)
-    ctx.fillText('Z', centerX + radius * 0.7 + 10, centerY - radius * 0.7 - 10)
-
-    // Draw state vector with rotation
-    const x = radius * Math.sin(theta) * Math.cos(phi + rotation.phi)
-    const y = radius * Math.sin(theta) * Math.sin(phi + rotation.phi)
-    const z = radius * Math.cos(theta)
-
-    // Apply 3D rotation
-    const rotX = x
-    const rotY = y * Math.cos(rotation.theta) - z * Math.sin(rotation.theta)
-    const rotZ = y * Math.sin(rotation.theta) + z * Math.cos(rotation.theta)
-
-    // Project to 2D
-    const screenX = centerX + rotX
-    const screenY = centerY - rotY
-
-    // Draw vector arrow
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--moss-green').trim()
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--moss-green').trim()
-    ctx.lineWidth = 3
-    
-    ctx.beginPath()
-    ctx.moveTo(centerX, centerY)
-    ctx.lineTo(screenX, screenY)
-    ctx.stroke()
-
-    // Draw arrowhead
-    const angle = Math.atan2(screenY - centerY, screenX - centerX)
-    const arrowSize = 15
-    ctx.beginPath()
-    ctx.moveTo(screenX, screenY)
-    ctx.lineTo(
-      screenX - arrowSize * Math.cos(angle - Math.PI / 6),
-      screenY - arrowSize * Math.sin(angle - Math.PI / 6)
-    )
-    ctx.lineTo(
-      screenX - arrowSize * Math.cos(angle + Math.PI / 6),
-      screenY - arrowSize * Math.sin(angle + Math.PI / 6)
-    )
-    ctx.closePath()
-    ctx.fill()
-
-    // Draw state point
-    ctx.beginPath()
-    ctx.arc(screenX, screenY, 8, 0, 2 * Math.PI)
-    ctx.fill()
-
-    // Draw pole labels
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--moss-green-dark').trim()
-    ctx.font = 'bold 18px Georgia'
-    ctx.fillText('|0', centerX - 15, centerY - radius - 30)
-    ctx.fillText('|1', centerX - 15, centerY + radius + 45)
+    rendererRef.current.render(sceneRef.current, cameraRef.current)
+    requestAnimationFrame(animate)
   }
 
-  const handleMouseDown = (e) => {
-    setIsDragging(true)
-    setLastMouse({ x: e.clientX, y: e.clientY })
-  }
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return
-
-    const deltaX = e.clientX - lastMouse.x
-    const deltaY = e.clientY - lastMouse.y
-
-    setRotation(prev => ({
-      theta: prev.theta + deltaY * 0.01,
-      phi: prev.phi + deltaX * 0.01
-    }))
-
-    setLastMouse({ x: e.clientX, y: e.clientY })
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
+  console.log('Three.js initialized successfully')
 
   if (loading) {
     return (
@@ -186,22 +172,13 @@ function BlochSphere({ operations, initialState }) {
 
   return (
     <div className="bloch-container">
-      <div className="bloch-content">
-        <div className="card bloch-card">
+      <div className="bloch-content-3d">
+        <div className="card bloch-card-3d">
           <h2 className="card-title">Bloch Sphere Visualization</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            Drag to rotate the sphere
+            Interactive 3D quantum state representation
           </p>
-          <canvas
-            ref={canvasRef}
-            width={600}
-            height={600}
-            className="bloch-canvas"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          />
+          <div ref={containerRef} className="bloch-canvas-3d" />
         </div>
 
         <div className="bloch-info">
@@ -210,25 +187,25 @@ function BlochSphere({ operations, initialState }) {
             {state && (
               <div className="state-info-grid">
                 <div className="info-item">
-                  <span className="info-label">|0 amplitude:</span>
+                  <span className="info-label">|0⟩ amplitude:</span>
                   <span className="info-value">
                     {state['0'].real.toFixed(4)} + {state['0'].imag.toFixed(4)}i
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">|1 amplitude:</span>
+                  <span className="info-label">|1⟩ amplitude:</span>
                   <span className="info-value">
                     {state['1'].real.toFixed(4)} + {state['1'].imag.toFixed(4)}i
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">|0 probability:</span>
+                  <span className="info-label">|0⟩ probability:</span>
                   <span className="info-value">
                     {(state['0'].probability * 100).toFixed(2)}%
                   </span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">|1 probability:</span>
+                  <span className="info-label">|1⟩ probability:</span>
                   <span className="info-value">
                     {(state['1'].probability * 100).toFixed(2)}%
                   </span>
@@ -240,9 +217,9 @@ function BlochSphere({ operations, initialState }) {
           <div className="card">
             <h2 className="card-title">About the Bloch Sphere</h2>
             <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              The Bloch sphere is a geometric representation of the pure state space of a single qubit. 
-              The north pole represents |0 and the south pole represents |1. 
-              Any point on the surface represents a valid quantum state.
+              The Bloch sphere represents the pure state space of a single qubit. 
+              The north pole represents |0⟩ and the south pole represents |1⟩. 
+              The green arrow shows the current quantum state.
             </p>
           </div>
         </div>
