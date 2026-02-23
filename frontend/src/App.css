@@ -1662,3 +1662,40 @@
     color: var(--text-secondary);
     line-height: 1.5;
 }
+
+/* ===== DARK MODE - BLOCH SPHERE ===== */
+[data-theme="dark"] .bloch-container {
+    background: transparent;
+}
+
+[data-theme="dark"] .bloch-content-3d {
+    background: transparent;
+}
+
+[data-theme="dark"] .bloch-card-3d {
+    background: var(--beige-200);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .bloch-canvas-3d {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .bloch-info .card {
+    background: var(--beige-200);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .info-item {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .info-label {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .info-value {
+    color: var(--moss-green-light);
+}

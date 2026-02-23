@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { simulateCircuit } from '../utils/api'
 import * as THREE from 'three'
+import { OrbitControls } from 'three-stdlib'
 
 function BlochSphere({ operations, initialState }) {
   const containerRef = useRef(null)
   const sceneRef = useRef(null)
   const rendererRef = useRef(null)
+  const controlsRef = useRef(null)
   const arrowRef = useRef(null)
   const [state, setState] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -19,6 +21,9 @@ function BlochSphere({ operations, initialState }) {
       initBlochSphere()
     }
     return () => {
+      if (controlsRef.current) {
+        controlsRef.current.dispose()
+      }
       if (rendererRef.current && containerRef.current) {
         containerRef.current.removeChild(rendererRef.current.domElement)
         rendererRef.current.dispose()
@@ -31,6 +36,25 @@ function BlochSphere({ operations, initialState }) {
       updateStateVector()
     }
   }, [state])
+
+  useEffect(() => {
+  // Update scene background when theme changes
+  const updateTheme = () => {
+    if (sceneRef.current) {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+      const bgColor = isDark ? 0x252520 : 0xf5f1e8
+      sceneRef.current.background = new THREE.Color(bgColor)
+    }
+  }
+
+  const observer = new MutationObserver(updateTheme)
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+  })
+
+  return () => observer.disconnect()
+}, [])
 
   const loadState = async () => {
     setLoading(true)
@@ -62,6 +86,16 @@ function BlochSphere({ operations, initialState }) {
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
+    // OrbitControls for rotation
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.05
+    controls.enableZoom = true
+    controls.enablePan = false
+    controls.minDistance = 3
+    controls.maxDistance = 10
+    controlsRef.current = controls
+
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
     scene.add(ambientLight)
 
@@ -75,28 +109,98 @@ function BlochSphere({ operations, initialState }) {
       color: 0xc9bfa8,
       wireframe: true,
       transparent: true,
-      opacity: 0.4
+      opacity: 0.3
     })
     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
     scene.add(sphere)
 
-    // Axes
-    const createAxis = (color, from, to) => {
+    // Solid sphere (semi-transparent)
+    const solidSphereMaterial = new THREE.MeshPhongMaterial({
+      color: 0xebe4d6,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide
+    })
+    const solidSphere = new THREE.Mesh(sphereGeometry, solidSphereMaterial)
+    scene.add(solidSphere)
+
+    // Axes with labels
+    const createAxisWithLabel = (color, from, to, label, labelPos) => {
       const points = [from, to]
       const geometry = new THREE.BufferGeometry().setFromPoints(points)
-      const material = new THREE.LineBasicMaterial({ color, linewidth: 2 })
-      return new THREE.Line(geometry, material)
+      const material = new THREE.LineBasicMaterial({ color, linewidth: 3 })
+      const line = new THREE.Line(geometry, material)
+      scene.add(line)
+
+      // Create text sprite
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+      canvas.width = 128
+      canvas.height = 128
+      context.font = 'Bold 80px Georgia'
+      context.fillStyle = `#${color.toString(16).padStart(6, '0')}`
+      context.textAlign = 'center'
+      context.textBaseline = 'middle'
+      context.fillText(label, 64, 64)
+
+      const texture = new THREE.CanvasTexture(canvas)
+      const spriteMaterial = new THREE.SpriteMaterial({ map: texture })
+      const sprite = new THREE.Sprite(spriteMaterial)
+      sprite.position.copy(labelPos)
+      sprite.scale.set(0.4, 0.4, 1)
+      scene.add(sprite)
     }
 
-    scene.add(createAxis(0xff6b6b, new THREE.Vector3(-2.5, 0, 0), new THREE.Vector3(2.5, 0, 0)))
-    scene.add(createAxis(0x6bff6b, new THREE.Vector3(0, -2.5, 0), new THREE.Vector3(0, 2.5, 0)))
-    scene.add(createAxis(0x6b6bff, new THREE.Vector3(0, 0, -2.5), new THREE.Vector3(0, 0, 2.5)))
+    const axisColor = 0x8a8a8a // Gray color
+    createAxisWithLabel(axisColor, new THREE.Vector3(-2, 0, 0), new THREE.Vector3(2, 0, 0), 'X', new THREE.Vector3(2.3, 0, 0))
+    createAxisWithLabel(axisColor, new THREE.Vector3(0, -2, 0), new THREE.Vector3(0, 2, 0), 'Y', new THREE.Vector3(0, 2.3, 0))
+    createAxisWithLabel(axisColor, new THREE.Vector3(0, 0, -2), new THREE.Vector3(0, 0, 2), 'Z', new THREE.Vector3(0, 0, 2.3))
+   
+  // |0⟩ and |1⟩ labels
+    const createStateLabel = (text, position, color) => {
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+      canvas.width = 256
+      canvas.height = 256
+      context.font = 'Bold 100px Georgia'
+      context.fillStyle = '#8a8a8a' // Gray color for labels
+      context.textAlign = 'center'
+      context.textBaseline = 'middle'
+      context.fillText(text, 128, 128)
+
+      const texture = new THREE.CanvasTexture(canvas)
+      const spriteMaterial = new THREE.SpriteMaterial({ map: texture })
+      const sprite = new THREE.Sprite(spriteMaterial)
+      sprite.position.copy(position)
+      sprite.scale.set(0.6, 0.6, 1)
+      scene.add(sprite)
+    }
+
+    createStateLabel('|0⟩', new THREE.Vector3(0, 0, 2.5), '#6b7f5f')
+    createStateLabel('|1⟩', new THREE.Vector3(0, 0, -2.5), '#6b7f5f')
+
+    // Equator circle
+    const equatorPoints = []
+    for (let i = 0; i <= 64; i++) {
+      const angle = (i / 64) * Math.PI * 2
+      equatorPoints.push(new THREE.Vector3(
+        2 * Math.cos(angle),
+        2 * Math.sin(angle),
+        0
+      ))
+    }
+    const equatorGeometry = new THREE.BufferGeometry().setFromPoints(equatorPoints)
+    const equator = new THREE.Line(
+      equatorGeometry,
+      new THREE.LineBasicMaterial({ color: 0xc9bfa8, transparent: true, opacity: 0.4 })
+    )
+    scene.add(equator)
 
     // State vector arrow
     const arrowGroup = new THREE.Group()
 
     const coneGeometry = new THREE.ConeGeometry(0.15, 0.4, 16)
-    const arrowMaterial = new THREE.MeshPhongMaterial({ color: 0x6b7f5f })
+    const arrowMaterial = new THREE.MeshPhongMaterial({ color: 0x8a9d7d }) // Lighter moss green
     const cone = new THREE.Mesh(coneGeometry, arrowMaterial)
     arrowGroup.add(cone)
 
@@ -104,24 +208,18 @@ function BlochSphere({ operations, initialState }) {
     const cylinder = new THREE.Mesh(cylinderGeometry, arrowMaterial)
     arrowGroup.add(cylinder)
 
-    const spherePoint = new THREE.Mesh(
-      new THREE.SphereGeometry(0.1, 16, 16),
-      arrowMaterial
-    )
-    arrowGroup.add(spherePoint)
-
     scene.add(arrowGroup)
     arrowRef.current = arrowGroup
 
     // Animation
     function animate() {
       requestAnimationFrame(animate)
-      sphere.rotation.y += 0.003
+      controls.update()
       renderer.render(scene, camera)
     }
     animate()
 
-    console.log('Bloch sphere initialized')
+    console.log('Bloch sphere with OrbitControls initialized')
   }
 
   const updateStateVector = () => {
@@ -151,9 +249,6 @@ function BlochSphere({ operations, initialState }) {
     arrow.children[0].position.y = length
     arrow.children[1].position.y = length / 2
     arrow.children[1].scale.y = length / 2
-    arrow.children[2].position.copy(endPoint)
-
-    console.log('State vector updated:', { x, y, z, theta, phi })
   }
 
   if (loading) {
@@ -172,9 +267,6 @@ function BlochSphere({ operations, initialState }) {
       <div className="bloch-content-3d">
         <div className="card bloch-card-3d">
           <h2 className="card-title">Bloch Sphere Visualization</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            Interactive 3D representation of the quantum state
-          </p>
           <div 
             ref={containerRef} 
             style={{ 
@@ -182,7 +274,8 @@ function BlochSphere({ operations, initialState }) {
               height: '600px', 
               border: '2px solid var(--beige-300)',
               borderRadius: '8px',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              cursor: 'grab'
             }}
           />
         </div>
@@ -221,29 +314,11 @@ function BlochSphere({ operations, initialState }) {
           </div>
 
           <div className="card">
-            <h2 className="card-title">Visualization Guide</h2>
-            <div className="controls-info">
-              <div className="control-item">
-                <strong>Red axis:</strong> X direction
-              </div>
-              <div className="control-item">
-                <strong>Green axis:</strong> Y direction
-              </div>
-              <div className="control-item">
-                <strong>Blue axis:</strong> Z direction (|0⟩ to |1⟩)
-              </div>
-              <div className="control-item">
-                <strong>Green arrow:</strong> Current quantum state
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
             <h2 className="card-title">About the Bloch Sphere</h2>
             <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
               The Bloch sphere represents all possible pure states of a single qubit. 
               The north pole (positive Z) represents |0⟩ and the south pole represents |1⟩. 
-              The green arrow points to the current state on the sphere surface.
+              The green arrow points to the current quantum state.
             </p>
           </div>
         </div>
