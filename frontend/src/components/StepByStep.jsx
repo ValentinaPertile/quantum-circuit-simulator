@@ -16,6 +16,7 @@ function StepByStep({ operations, numQubits, initialState }) {
     if (operations.length === 0) {
       setStepResults([])
       setCurrentStep(0)
+      setLoading(false)
       return
     }
 
@@ -60,6 +61,8 @@ function StepByStep({ operations, numQubits, initialState }) {
 
   const nextStep = () => goToStep(currentStep + 1)
   const prevStep = () => goToStep(currentStep - 1)
+  const goToFirst = () => goToStep(0)
+  const goToLast = () => goToStep(stepResults.length - 1)
 
   if (operations.length === 0) {
     return (
@@ -98,11 +101,40 @@ function StepByStep({ operations, numQubits, initialState }) {
     )
   }
 
+  if (stepResults.length === 0) {
+    return (
+      <div className="step-by-step-container">
+        <div className="empty-state">
+          <h3>Loading...</h3>
+        </div>
+      </div>
+    )
+  }
+
   const currentStepData = stepResults[currentStep]
+
+  if (!currentStepData) {
+    return (
+      <div className="step-by-step-container">
+        <div className="error-state">
+          <h3>Error</h3>
+          <p>Step data not found</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="step-by-step-container">
       <div className="step-controls">
+        <button 
+          className="btn btn-secondary"
+          onClick={goToFirst}
+          disabled={currentStep === 0}
+        >
+          First
+        </button>
+        
         <button 
           className="btn btn-secondary"
           onClick={prevStep}
@@ -124,11 +156,11 @@ function StepByStep({ operations, numQubits, initialState }) {
         </button>
         
         <button 
-          className="btn btn-primary"
-          onClick={() => goToStep(0)}
-          style={{ marginLeft: '1rem' }}
+          className="btn btn-secondary"
+          onClick={goToLast}
+          disabled={currentStep === stepResults.length - 1}
         >
-          Reset
+          Last
         </button>
       </div>
 
@@ -164,7 +196,7 @@ function StepByStep({ operations, numQubits, initialState }) {
         <div className="step-right">
           <div className="card">
             <h2 className="card-title">Quantum State</h2>
-            {currentStepData.result.success && (
+            {currentStepData.result && currentStepData.result.success && (
               <div>
                 {Object.entries(currentStepData.result.amplitudes).map(([state, amp]) => (
                   <AmplitudeBar key={state} state={state} probability={amp.probability} />
@@ -175,28 +207,10 @@ function StepByStep({ operations, numQubits, initialState }) {
 
           <div className="card">
             <h2 className="card-title">State Vector Notation</h2>
-            {currentStepData.result.success && (
+            {currentStepData.result && currentStepData.result.success && (
               <StateNotation amplitudes={currentStepData.result.amplitudes} />
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="step-timeline">
-        <div className="timeline-track">
-          {stepResults.map((step, idx) => (
-            <div
-              key={idx}
-              className={`timeline-point ${idx === currentStep ? 'active' : ''} ${idx < currentStep ? 'completed' : ''}`}
-              onClick={() => goToStep(idx)}
-              title={step.operation ? `Step ${idx}: ${step.operation.gate.toUpperCase()}` : 'Initial state'}
-            >
-              <div className="timeline-dot"></div>
-              <div className="timeline-label">
-                {step.operation ? step.operation.gate.toUpperCase() : 'Start'}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -226,7 +240,7 @@ function AmplitudeBar({ state, probability }) {
   return (
     <div className="amplitude-item">
       <div className="amplitude-header">
-        <span className="amplitude-state">|{state}</span>
+        <span className="amplitude-state">|{state}⟩</span>
         <span className="amplitude-probability">{percentage}%</span>
       </div>
       <div className="amplitude-bar-container">
@@ -246,17 +260,17 @@ function StateNotation({ amplitudes }) {
     })
 
   if (terms.length === 0) {
-    return <div className="state-notation">|psi = 0</div>
+    return <div className="state-notation">|ψ⟩ = 0</div>
   }
 
   return (
     <div className="state-notation">
-      <span className="psi">|psi = </span>
+      <span className="psi">|ψ⟩ = </span>
       {terms.map((term, idx) => (
         <span key={idx}>
           {idx > 0 && <span className="operator"> + </span>}
           <span className="coefficient">{term.coef}</span>
-          <span className="ket">|{term.state}</span>
+          <span className="ket">|{term.state}⟩</span>
         </span>
       ))}
     </div>
