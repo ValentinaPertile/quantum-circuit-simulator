@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { simulateCircuit } from '../utils/api'
 import * as THREE from 'three'
 
@@ -6,7 +6,7 @@ function BlochSphere({ operations, initialState }) {
   const containerRef = useRef(null)
   const sceneRef = useRef(null)
   const rendererRef = useRef(null)
-  const cameraRef = useRef(null)
+  const arrowRef = useRef(null)
   const [state, setState] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -15,20 +15,20 @@ function BlochSphere({ operations, initialState }) {
   }, [operations, initialState])
 
   useEffect(() => {
-    if (containerRef.current && !sceneRef.current) {
-      initThreeJS()
+    if (containerRef.current && !sceneRef.current && !loading) {
+      initBlochSphere()
     }
     return () => {
-      if (rendererRef.current) {
-        containerRef.current?.removeChild(rendererRef.current.domElement)
+      if (rendererRef.current && containerRef.current) {
+        containerRef.current.removeChild(rendererRef.current.domElement)
         rendererRef.current.dispose()
       }
     }
-  }, [])
+  }, [loading])
 
   useEffect(() => {
-    if (state && sceneRef.current) {
-      updateBlochVector()
+    if (state && arrowRef.current) {
+      updateStateVector()
     }
   }, [state])
 
@@ -40,124 +40,121 @@ function BlochSphere({ operations, initialState }) {
         setState(result.amplitudes)
       }
     } catch (error) {
-      console.error('Error loading state:', error)
+      console.error('Error:', error)
     } finally {
       setLoading(false)
     }
   }
 
-    const initThreeJS = () => {
+  const initBlochSphere = () => {
     const container = containerRef.current
-    if (!container) return
-    
-    const width = container.clientWidth || 800
-    const height = container.clientHeight || 600
-    
-    console.log('Container dimensions:', width, height)
 
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color('#f5f1e8')
+    scene.background = new THREE.Color(0xf5f1e8)
     sceneRef.current = scene
 
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
-    camera.position.set(4, 4, 6)
+    const camera = new THREE.PerspectiveCamera(50, 800 / 600, 0.1, 1000)
+    camera.position.set(4, 3, 5)
     camera.lookAt(0, 0, 0)
-    cameraRef.current = camera
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setSize(width, height)
+    renderer.setSize(800, 600)
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
     scene.add(ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5)
     directionalLight.position.set(5, 5, 5)
     scene.add(directionalLight)
 
+    // Wireframe sphere
     const sphereGeometry = new THREE.SphereGeometry(2, 32, 32)
     const sphereMaterial = new THREE.MeshBasicMaterial({
-      color: 0xddd5c3,
+      color: 0xc9bfa8,
       wireframe: true,
       transparent: true,
-      opacity: 0.3
+      opacity: 0.4
     })
     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
     scene.add(sphere)
 
-    const axisLength = 2.5
-    const xAxis = createAxis(0xff6b6b, axisLength, 0, 0)
-    const yAxis = createAxis(0x6bff6b, 0, axisLength, 0)
-    const zAxis = createAxis(0x6b6bff, 0, 0, axisLength)
-    scene.add(xAxis, yAxis, zAxis)
+    // Axes
+    const createAxis = (color, from, to) => {
+      const points = [from, to]
+      const geometry = new THREE.BufferGeometry().setFromPoints(points)
+      const material = new THREE.LineBasicMaterial({ color, linewidth: 2 })
+      return new THREE.Line(geometry, material)
+    }
 
+    scene.add(createAxis(0xff6b6b, new THREE.Vector3(-2.5, 0, 0), new THREE.Vector3(2.5, 0, 0)))
+    scene.add(createAxis(0x6bff6b, new THREE.Vector3(0, -2.5, 0), new THREE.Vector3(0, 2.5, 0)))
+    scene.add(createAxis(0x6b6bff, new THREE.Vector3(0, 0, -2.5), new THREE.Vector3(0, 0, 2.5)))
+
+    // State vector arrow
     const arrowGroup = new THREE.Group()
-    const arrowGeometry = new THREE.ConeGeometry(0.15, 0.4, 16)
-    const arrowMaterial = new THREE.MeshPhongMaterial({ color: 0x6b7f5f })
-    const arrowHead = new THREE.Mesh(arrowGeometry, arrowMaterial)
-    arrowHead.rotation.x = Math.PI / 2
-    arrowGroup.add(arrowHead)
 
-    const shaftGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2, 16)
-    const shaft = new THREE.Mesh(shaftGeometry, arrowMaterial)
-    shaft.rotation.x = Math.PI / 2
-    arrowGroup.add(shaft)
+    const coneGeometry = new THREE.ConeGeometry(0.15, 0.4, 16)
+    const arrowMaterial = new THREE.MeshPhongMaterial({ color: 0x6b7f5f })
+    const cone = new THREE.Mesh(coneGeometry, arrowMaterial)
+    arrowGroup.add(cone)
+
+    const cylinderGeometry = new THREE.CylinderGeometry(0.06, 0.06, 2, 16)
+    const cylinder = new THREE.Mesh(cylinderGeometry, arrowMaterial)
+    arrowGroup.add(cylinder)
+
+    const spherePoint = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 16, 16),
+      arrowMaterial
+    )
+    arrowGroup.add(spherePoint)
 
     scene.add(arrowGroup)
-    scene.userData.arrow = arrowGroup
+    arrowRef.current = arrowGroup
 
+    // Animation
+    function animate() {
+      requestAnimationFrame(animate)
+      sphere.rotation.y += 0.003
+      renderer.render(scene, camera)
+    }
     animate()
+
+    console.log('Bloch sphere initialized')
   }
 
-  const createAxis = (color, x, y, z) => {
-    const material = new THREE.LineBasicMaterial({ color })
-    const points = [
-      new THREE.Vector3(-x, -y, -z),
-      new THREE.Vector3(x, y, z)
-    ]
-    const geometry = new THREE.BufferGeometry().setFromPoints(points)
-    return new THREE.Line(geometry, material)
-  }
-
-  const updateBlochVector = () => {
-    if (!state || !sceneRef.current) return
+  const updateStateVector = () => {
+    if (!state || !arrowRef.current) return
 
     const alpha = state['0']
     const beta = state['1']
+
     const theta = 2 * Math.acos(Math.sqrt(alpha.probability))
     const phi = Math.atan2(beta.imag, beta.real)
 
-    const x = 2 * Math.sin(theta) * Math.cos(phi)
-    const y = 2 * Math.sin(theta) * Math.sin(phi)
-    const z = 2 * Math.cos(theta)
+    const x = Math.sin(theta) * Math.cos(phi)
+    const y = Math.sin(theta) * Math.sin(phi)
+    const z = Math.cos(theta)
 
-    const arrow = sceneRef.current.userData.arrow
-    if (arrow) {
-      arrow.position.set(0, 0, 0)
-      const direction = new THREE.Vector3(x, y, z).normalize()
-      const quaternion = new THREE.Quaternion()
-      quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction)
-      arrow.setRotationFromQuaternion(quaternion)
-      
-      const length = Math.sqrt(x * x + y * y + z * z)
-      arrow.children[1].scale.z = length
-      arrow.children[0].position.z = length
-    }
+    const length = 2
+    const endPoint = new THREE.Vector3(x * length, y * length, z * length)
+
+    const arrow = arrowRef.current
+    arrow.position.set(0, 0, 0)
+
+    const direction = endPoint.clone().normalize()
+    const quaternion = new THREE.Quaternion()
+    quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction)
+    arrow.setRotationFromQuaternion(quaternion)
+
+    arrow.children[0].position.y = length
+    arrow.children[1].position.y = length / 2
+    arrow.children[1].scale.y = length / 2
+    arrow.children[2].position.copy(endPoint)
+
+    console.log('State vector updated:', { x, y, z, theta, phi })
   }
-
-  const animate = () => {
-    if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return
-    
-    if (sceneRef.current.children[2]) {
-      sceneRef.current.children[2].rotation.y += 0.005
-    }
-    
-    rendererRef.current.render(sceneRef.current, cameraRef.current)
-    requestAnimationFrame(animate)
-  }
-
-  console.log('Three.js initialized successfully')
 
   if (loading) {
     return (
@@ -176,9 +173,18 @@ function BlochSphere({ operations, initialState }) {
         <div className="card bloch-card-3d">
           <h2 className="card-title">Bloch Sphere Visualization</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            Interactive 3D quantum state representation
+            Interactive 3D representation of the quantum state
           </p>
-          <div ref={containerRef} className="bloch-canvas-3d" />
+          <div 
+            ref={containerRef} 
+            style={{ 
+              width: '800px', 
+              height: '600px', 
+              border: '2px solid var(--beige-300)',
+              borderRadius: '8px',
+              overflow: 'hidden'
+            }}
+          />
         </div>
 
         <div className="bloch-info">
@@ -215,11 +221,29 @@ function BlochSphere({ operations, initialState }) {
           </div>
 
           <div className="card">
+            <h2 className="card-title">Visualization Guide</h2>
+            <div className="controls-info">
+              <div className="control-item">
+                <strong>Red axis:</strong> X direction
+              </div>
+              <div className="control-item">
+                <strong>Green axis:</strong> Y direction
+              </div>
+              <div className="control-item">
+                <strong>Blue axis:</strong> Z direction (|0⟩ to |1⟩)
+              </div>
+              <div className="control-item">
+                <strong>Green arrow:</strong> Current quantum state
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
             <h2 className="card-title">About the Bloch Sphere</h2>
             <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              The Bloch sphere represents the pure state space of a single qubit. 
-              The north pole represents |0⟩ and the south pole represents |1⟩. 
-              The green arrow shows the current quantum state.
+              The Bloch sphere represents all possible pure states of a single qubit. 
+              The north pole (positive Z) represents |0⟩ and the south pole represents |1⟩. 
+              The green arrow points to the current state on the sphere surface.
             </p>
           </div>
         </div>
