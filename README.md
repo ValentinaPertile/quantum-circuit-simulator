@@ -1,6 +1,6 @@
 # Quantum Circuit Simulator
 
-[EN] | [SP](#español)
+[EN] | [[SP]](#español)
 
 ---
 
