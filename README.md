@@ -222,12 +222,6 @@ Contributions are welcome. Please open an issue first to discuss proposed change
 
 ## Español
 
-Aquí está la traducción al español y la guía de deployment:
-
----
-
-## Español
-
 ### Descripción General
 
 Una plataforma profesional de computación cuántica con herramientas de visualización interactiva y análisis de estado en tiempo real. Este proyecto fue desarrollado como un complemento práctico para reforzar los conceptos aprendidos en el curso "Introduction to Quantum Computing" de The Open University, proporcionando una forma visual e interactiva de entender el comportamiento de los circuitos cuánticos.
