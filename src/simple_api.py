@@ -321,7 +321,10 @@ if __name__ == '__main__':
     print(f"Script location: {os.path.abspath(__file__)}")
     
     try:
-        run_server()
+        # Railway provides PORT environment variable
+        port = int(os.environ.get('PORT', 5000))
+        print(f"Using port: {port}")
+        run_server(port=port)
     except Exception as e:
         print(f"Server error: {e}")
         import traceback
