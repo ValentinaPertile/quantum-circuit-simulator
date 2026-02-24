@@ -118,26 +118,30 @@ function App() {
     })
     
     if (wouldLoseOperations && operations.length > 0) {
-      const confirmed = window.confirm(
-        'Changing the number of qubits will remove some operations that reference non-existent qubits. Continue?'
-      )
-      if (!confirmed) {
-        return
-      }
+      setTimeout(() => {
+        const confirmed = window.confirm(
+          'Changing the number of qubits will remove some operations that reference non-existent qubits. Continue?'
+        )
+        
+        if (confirmed) {
+          const validOperations = operations.filter(op => {
+            if (op.target !== undefined && op.target >= newNumQubits) return false
+            if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return false
+            return true
+          })
+          
+          setNumQubits(newNumQubits)
+          setInitialState('0'.repeat(newNumQubits))
+          setOperations(validOperations)
+          setResults(null)
+          saveToHistory(validOperations)
+        }
+      }, 100)
+    } else {
+      setNumQubits(newNumQubits)
+      setInitialState('0'.repeat(newNumQubits))
+      setResults(null)
     }
-    
-    setNumQubits(newNumQubits)
-    setInitialState('0'.repeat(newNumQubits))
-    
-    const validOperations = operations.filter(op => {
-      if (op.target !== undefined && op.target >= newNumQubits) return false
-      if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return false
-      return true
-    })
-    
-    setOperations(validOperations)
-    setResults(null)
-    saveToHistory(validOperations)
   }
 
   const loadPreset = (preset) => {
