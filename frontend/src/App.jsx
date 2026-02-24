@@ -10,6 +10,7 @@ import StepByStep from './components/StepByStep'
 import BlochSphere from './components/BlochSphere.jsx'
 import SaveCircuitModal from './components/SaveCircuitModal'
 import LoadCircuitModal from './components/LoadCircuitModal'
+import ConfirmDialog from './components/ConfirmDialog'
 import { saveCircuit, importCircuit } from './utils/circuitStorage'
 import './App.css'
 
@@ -29,6 +30,7 @@ function App() {
   // Modal states
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [showLoadModal, setShowLoadModal] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState(null) // { message, onConfirm }
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light'
@@ -116,27 +118,24 @@ function App() {
       if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return true
       return false
     })
-    
+
     if (wouldLoseOperations && operations.length > 0) {
-      setTimeout(() => {
-        const confirmed = window.confirm(
-          'Changing the number of qubits will remove some operations that reference non-existent qubits. Continue?'
-        )
-        
-        if (confirmed) {
+      setConfirmDialog({
+        message: 'Changing the number of qubits will remove some operations that reference non-existent qubits. Continue?',
+        onConfirm: () => {
           const validOperations = operations.filter(op => {
             if (op.target !== undefined && op.target >= newNumQubits) return false
             if (op.control !== undefined && (op.control >= newNumQubits || op.target >= newNumQubits)) return false
             return true
           })
-          
           setNumQubits(newNumQubits)
           setInitialState('0'.repeat(newNumQubits))
           setOperations(validOperations)
           setResults(null)
           saveToHistory(validOperations)
+          setConfirmDialog(null)
         }
-      }, 100)
+      })
     } else {
       setNumQubits(newNumQubits)
       setInitialState('0'.repeat(newNumQubits))
@@ -382,6 +381,14 @@ function App() {
         <LoadCircuitModal 
           onLoad={handleLoadCircuit}
           onClose={() => setShowLoadModal(false)}
+        />
+      )}
+
+      {confirmDialog && (
+        <ConfirmDialog
+          message={confirmDialog.message}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
         />
       )}
     </div>

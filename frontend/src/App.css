@@ -3,12 +3,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    max-width: 100%;
-}
-
-/* Exceptions for elements that need to overflow (circuit display scrolls internally) */
-svg, canvas {
-    max-width: none;
 }
 
 html {
@@ -592,6 +586,14 @@ body {
     border-radius: 8px;
     padding: 2rem;
     border: 2px solid var(--beige-300);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.circuit-display svg {
+    display: block;
+    min-width: 100%;
 }
 
 .circuit-empty {
@@ -831,6 +833,10 @@ body {
     padding: 1rem 1.5rem;
     background: var(--beige-200);
     border-bottom: 2px solid var(--beige-300);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem;
+    flex-wrap: nowrap;
 }
 
 .code-toolbar-title {
@@ -1577,27 +1583,30 @@ body {
     }
 
     /* Code editor */
-    .code-controls {
+    .code-toolbar {
         flex-wrap: wrap;
         gap: 0.5rem;
-    }
-
-    .code-controls .btn {
-        flex: 1 1 45%;
-        min-width: 120px;
-        font-size: 0.85rem;
-    }
-
-    .format-selector {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-
-    .code-editable,
-    .python-code {
-        font-size: 0.8rem;
         padding: 0.8rem;
-        max-height: 400px;
+    }
+
+    .code-toolbar-title {
+        width: 100%;
+    }
+
+    .code-toolbar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .code-toolbar-actions .btn,
+    .export-format {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.6rem;
+        white-space: nowrap;
     }
 
     /* Landing page */
