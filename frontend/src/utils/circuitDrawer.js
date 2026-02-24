@@ -3,17 +3,24 @@ import * as d3 from 'd3'
 export function drawCircuit(svgElement, numQubits, operations) {
   d3.select(svgElement).selectAll('*').remove()
 
-  const width = svgElement.clientWidth || 800
-  const height = 350
-  const svg = d3.select(svgElement).attr('viewBox', '0 0 ' + width + ' ' + height)
-
-  if (operations.length === 0) return
-
   const startX = 80
   const startY = 60
   const qubitSpacing = 80
   const gateSpacing = 100
   const gateWidth = 60
+
+  // Calculate width based on content, not container
+  const minWidth = 400
+  const contentWidth = startX + operations.length * gateSpacing + 100
+  const width = Math.max(minWidth, contentWidth)
+  const height = Math.max(200, startY + numQubits * qubitSpacing + 40)
+
+  const svg = d3.select(svgElement)
+    .attr('width', width)         // fixed pixel width so it can overflow and scroll
+    .attr('height', height)
+    .attr('viewBox', `0 0 ${width} ${height}`)
+
+  if (operations.length === 0) return
 
   // Detectar tema actual
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark'

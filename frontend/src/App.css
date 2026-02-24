@@ -504,6 +504,63 @@ body {
     border-color: var(--moss-green);
 }
 
+/* ===== QUBIT COUNTER ===== */
+.qubit-counter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.qubit-btn {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--beige-300);
+    border-radius: 8px;
+    background: var(--beige-200);
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.qubit-btn:hover:not(:disabled) {
+    background: var(--moss-green);
+    color: var(--white);
+    border-color: var(--moss-green);
+}
+
+.qubit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.qubit-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--moss-green-dark);
+    min-width: 24px;
+    text-align: center;
+    font-family: 'Georgia', serif;
+}
+
+[data-theme="dark"] .qubit-btn {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .qubit-btn:hover:not(:disabled) {
+    background: var(--moss-green);
+    color: var(--beige-100);
+}
+
 /* ===== GATES ===== */
 .gates-grid {
     display: grid;

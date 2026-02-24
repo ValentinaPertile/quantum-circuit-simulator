@@ -53,14 +53,19 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
         <h2 className="card-title">Configuration</h2>
         <div className="config-row">
           <label className="config-label">Number of Qubits:</label>
-          <input 
-            type="number" 
-            className="config-input"
-            min="1" 
-            max="3" 
-            value={numQubits}
-            onChange={(e) => onNumQubitsChange(parseInt(e.target.value))}
-          />
+          <div className="qubit-counter">
+            <button
+              className="qubit-btn"
+              onClick={() => numQubits > 1 && onNumQubitsChange(numQubits - 1)}
+              disabled={numQubits <= 1}
+            >−</button>
+            <span className="qubit-value">{numQubits}</span>
+            <button
+              className="qubit-btn"
+              onClick={() => numQubits < 3 && onNumQubitsChange(numQubits + 1)}
+              disabled={numQubits >= 3}
+            >+</button>
+          </div>
         </div>
       </div>
 
@@ -72,7 +77,6 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
               <label className="config-label">Qubit {i}:</label>
               <select 
                 className="config-input"
-                style={{ flex: 1, minWidth: 0 }}
                 value={initialState[i] || '0'}
                 onChange={(e) => handleQubitStateChange(i, e.target.value)}
               >
