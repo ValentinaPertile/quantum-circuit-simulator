@@ -3,6 +3,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    max-width: 100%;
+}
+
+/* Exceptions for elements that need to overflow (circuit display scrolls internally) */
+svg, canvas {
+    max-width: none;
 }
 
 html {
@@ -475,12 +481,15 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
+    width: 100%;
+    min-width: 0;
 }
 
 .config-label {
     font-size: 0.95rem;
     color: var(--text-secondary);
     min-width: 130px;
+    flex-shrink: 0;
 }
 
 .config-input {
@@ -491,6 +500,9 @@ body {
     color: var(--text-primary);
     font-size: 0.95rem;
     font-family: 'Georgia', serif;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
 }
 
 .config-input:focus {
@@ -504,6 +516,14 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     margin-top: 1rem;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .gates-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
 }
 
 .gate-btn {
@@ -2207,11 +2227,17 @@ body {
 }
 .bloch-canvas-3d {
     width: 100%;
-    height: 600px;
+    height: 500px;
     border: 2px solid var(--beige-300);
     border-radius: 8px;
     overflow: hidden;
     background: var(--beige-100);
+}
+
+@media (max-width: 768px) {
+    .bloch-canvas-3d {
+        height: 350px;
+    }
 }
 
 .bloch-canvas-3d canvas {

@@ -72,17 +72,19 @@ function BlochSphere({ operations, initialState }) {
 
   const initBlochSphere = () => {
     const container = containerRef.current
+    const width = container.clientWidth || 600
+    const height = container.clientHeight || 500
 
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0xf5f1e8)
     sceneRef.current = scene
 
-    const camera = new THREE.PerspectiveCamera(50, 800 / 600, 0.1, 1000)
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000)
     camera.position.set(4, 3, 5)
     camera.lookAt(0, 0, 0)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setSize(800, 600)
+    renderer.setSize(width, height)
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
@@ -269,14 +271,8 @@ function BlochSphere({ operations, initialState }) {
           <h2 className="card-title">Bloch Sphere Visualization</h2>
           <div 
             ref={containerRef} 
-            style={{ 
-              width: '800px', 
-              height: '600px', 
-              border: '2px solid var(--beige-300)',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              cursor: 'grab'
-            }}
+            className="bloch-canvas-3d"
+            style={{ cursor: 'grab' }}
           />
         </div>
 

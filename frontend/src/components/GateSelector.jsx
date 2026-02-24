@@ -72,6 +72,7 @@ function GateSelector({ numQubits, onNumQubitsChange, onAddOperation, onLoadPres
               <label className="config-label">Qubit {i}:</label>
               <select 
                 className="config-input"
+                style={{ flex: 1, minWidth: 0 }}
                 value={initialState[i] || '0'}
                 onChange={(e) => handleQubitStateChange(i, e.target.value)}
               >
