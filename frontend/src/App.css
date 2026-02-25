@@ -2576,6 +2576,11 @@ body {
     background: var(--white);
 }
 
+.menu-container {
+    margin-left: auto;
+    position: relative; /* importante para el dropdown */
+}
+
 .hamburger-line {
     display: block;
     width: 18px;
