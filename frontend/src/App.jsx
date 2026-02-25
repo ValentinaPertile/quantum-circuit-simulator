@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import LandingPage from './components/LandingPage'
 import Header from './components/Header'
+import { saveToHistory } from './components/Header'
 import GateSelector from './components/GateSelector'
 import CircuitVisualizer from './components/CircuitVisualizer'
 import OperationsList from './components/OperationsList'
@@ -330,7 +331,12 @@ function App() {
               onRemove={removeOperation}
               onReorder={reorderOperations}
               onClear={clearCircuit}
-              onSimulate={setResults}
+              onSimulate={(data) => {
+                setResults(data)
+                if (data && data.success) {
+                  saveToHistory(numQubits, operations, data.amplitudes)
+                }
+              }}
               numQubits={numQubits}
               initialState={initialState}
             />
