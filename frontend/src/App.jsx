@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import LandingPage from './components/LandingPage'
 import Header from './components/Header'
-import { saveToHistory as saveSimulationToHistory } from './components/Header'
+import { saveSimulationToHistory } from './components/SimulationHistory'
+import SimulationHistory from './components/SimulationHistory'
 import GateSelector from './components/GateSelector'
 import CircuitVisualizer from './components/CircuitVisualizer'
 import OperationsList from './components/OperationsList'
@@ -284,6 +285,7 @@ function App() {
               style={{ display: 'none' }}
             />
           </label>
+          <SimulationHistory />
           
           {/* Undo/Redo buttons */}
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>

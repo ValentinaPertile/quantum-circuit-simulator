@@ -1,4 +1,3 @@
-
 /* ===== GLOBAL RESET ===== */
 * {
     margin: 0;
@@ -351,25 +350,35 @@ body {
 /* ===== HEADER ===== */
 .header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    padding: 1.2rem 1.5rem;
     background: var(--white);
     border-radius: 12px;
     border: 2px solid var(--beige-300);
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 0;
+}
+
 .header-title h1 {
-    font-size: 2rem;
+    font-size: 1.6rem;
     font-weight: 400;
     color: var(--moss-green);
     letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .header-subtitle {
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-style: italic;
 }
 
@@ -377,6 +386,21 @@ body {
     display: flex;
     gap: 1rem;
     align-items: center;
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .header-title h1 {
+        font-size: 1.2rem;
+    }
+
+    .header-subtitle {
+        font-size: 0.75rem;
+    }
 }
 
 /* ===== NAVIGATION TABS ===== */
@@ -2827,4 +2851,195 @@ body {
 
 .simulate-error-close:hover {
     opacity: 1;
+}
+
+/* ===== SIMULATION HISTORY DROPDOWN ===== */
+.sim-history-wrapper {
+    position: relative;
+}
+
+.sim-history-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: var(--white);
+    border: 2px solid var(--beige-300);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px var(--shadow-hover);
+    z-index: 200;
+    width: 320px;
+    max-height: 480px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: menuFadeIn 0.15s ease;
+}
+
+.sim-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.9rem 1.2rem;
+    border-bottom: 2px solid var(--beige-300);
+    background: var(--beige-200);
+    flex-shrink: 0;
+}
+
+.sim-history-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--moss-green-dark);
+}
+
+.sim-history-clear {
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.sim-history-clear:hover {
+    background: var(--beige-300);
+    color: var(--text-primary);
+}
+
+.sim-history-empty {
+    padding: 2rem 1.2rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+.sim-history-list {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+}
+
+.sim-history-item {
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid var(--beige-300);
+}
+
+.sim-history-item:last-child {
+    border-bottom: none;
+}
+
+.sim-history-item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sim-history-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.sim-history-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--moss-green-dark);
+    background: var(--beige-200);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.sim-history-preview {
+    background: var(--beige-100);
+    border: 1px solid var(--beige-300);
+    border-radius: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 0.5rem;
+}
+
+.sim-history-probs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.sim-history-prob-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+}
+
+.sim-history-prob-state {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: var(--moss-green-dark);
+    min-width: 30px;
+}
+
+.sim-history-prob-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--beige-300);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.sim-history-prob-fill {
+    height: 100%;
+    background: var(--moss-green);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.sim-history-prob-val {
+    color: var(--text-muted);
+    min-width: 28px;
+    text-align: right;
+}
+
+/* Mobile: full width dropdown */
+@media (max-width: 768px) {
+    .sim-history-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 60vh;
+        border-radius: 16px 16px 0 0;
+        border-bottom: none;
+        animation: slideUp 0.2s ease;
+    }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+/* Dark mode */
+[data-theme="dark"] .sim-history-dropdown {
+    background: var(--beige-200);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .sim-history-header {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
+}
+
+[data-theme="dark"] .sim-history-badge {
+    background: var(--beige-300);
+}
+
+[data-theme="dark"] .sim-history-preview {
+    background: var(--beige-300);
+    border-color: var(--beige-400);
 }
