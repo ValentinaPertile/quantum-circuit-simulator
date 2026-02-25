@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { drawCircuit } from '../utils/circuitDrawer'
 
 export function saveSimulationToHistory(numQubits, operations, amplitudes) {
   const MAX = 10
@@ -22,6 +21,15 @@ export function saveSimulationToHistory(numQubits, operations, amplitudes) {
 
   const updated = [entry, ...history].slice(0, MAX)
   localStorage.setItem('simulation_history', JSON.stringify(updated))
+}
+
+function buildNotation(operations) {
+  if (!operations || operations.length === 0) return '—'
+  return operations.map(op => {
+    if (op.gate === 'cnot') return `CNOT(q${op.control}→q${op.target})`
+    if (op.gate === 'measure') return `M(q${op.target})`
+    return `${op.gate.toUpperCase()}(q${op.target})`
+  }).join(' → ')
 }
 
 function SimulationHistory() {
@@ -65,7 +73,7 @@ function SimulationHistory() {
   return (
     <div className="sim-history-wrapper" ref={panelRef}>
       <button className="btn btn-secondary" onClick={() => setOpen(!open)}>
-        ◷ History
+        History
       </button>
 
       {open && (
@@ -93,14 +101,6 @@ function SimulationHistory() {
 }
 
 function HistoryItem({ item, formatDate }) {
-  const svgRef = useRef(null)
-
-  useEffect(() => {
-    if (svgRef.current && item.operations?.length > 0) {
-      try { drawCircuit(svgRef.current, item.numQubits, item.operations) } catch (e) {}
-    }
-  }, [item])
-
   return (
     <div className="sim-history-item">
       <div className="sim-history-item-meta">
@@ -108,8 +108,8 @@ function HistoryItem({ item, formatDate }) {
         <span className="sim-history-badge">{item.numQubits}q · {item.operations.length} gates</span>
       </div>
 
-      <div className="sim-history-preview">
-        <svg ref={svgRef} width="260" height="80" style={{ display: 'block' }} />
+      <div className="sim-history-notation">
+        {buildNotation(item.operations)}
       </div>
 
       {item.probabilities && Object.keys(item.probabilities).length > 0 && (

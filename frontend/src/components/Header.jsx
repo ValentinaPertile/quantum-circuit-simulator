@@ -50,7 +50,6 @@ function Header({ theme, onToggleTheme, onBackToHome }) {
 
         <div className="header-title">
           <h1>Quantum Circuit Simulator</h1>
-          <div className="header-subtitle">Build and simulate quantum circuits</div>
         </div>
       </div>
     </header>
