@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 
-function SaveCircuitModal({ onSave, onClose }) {
+function SaveCircuitModal({ onSave, onClose, showToast }) {
   const [circuitName, setCircuitName] = useState('')
 
   const handleSave = () => {
     if (!circuitName.trim()) {
-      alert('Please enter a circuit name')
+      showToast('Please enter a circuit name', 'error')
       return
     }
     onSave(circuitName)

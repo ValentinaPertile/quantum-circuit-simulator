@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from 'react'
 import { getCircuits, deleteCircuit, renameCircuit, exportCircuit } from '../utils/circuitStorage'
 
-function LoadCircuitModal({ onLoad, onClose }) {
+function LoadCircuitModal({ onLoad, onClose, showToast }) {
   const [circuits, setCircuits] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [editingName, setEditingName] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   useEffect(() => {
     loadCircuits()
   }, [])
 
   const loadCircuits = () => {
-    setCircuits(getCircuits().reverse()) // Más recientes primero
+    setCircuits(getCircuits().reverse())
   }
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this circuit?')) {
-      deleteCircuit(id)
-      loadCircuits()
-    }
+    setConfirmDeleteId(id)
+  }
+
+  const confirmDelete = () => {
+    deleteCircuit(confirmDeleteId)
+    setConfirmDeleteId(null)
+    loadCircuits()
   }
 
   const handleRename = (id) => {
@@ -75,26 +79,30 @@ function LoadCircuitModal({ onLoad, onClose }) {
                   <div className="saved-circuit-details">
                     {circuit.numQubits} qubit{circuit.numQubits > 1 ? 's' : ''} • {circuit.operations.length} operation{circuit.operations.length !== 1 ? 's' : ''} • {formatDate(circuit.timestamp)}
                   </div>
+                  {confirmDeleteId === circuit.id && (
+                    <div className="inline-confirm">
+                      <span>Delete this circuit?</span>
+                      <button className="btn btn-clear" style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }} onClick={confirmDelete}>Yes, delete</button>
+                      <button className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.25rem 0.6rem' }} onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                    </div>
+                  )}
                 </div>
                 <div className="saved-circuit-actions">
-                  <button 
+                  <button
                     className="btn btn-secondary"
                     style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}
                     onClick={() => exportCircuit(circuit)}
                   >
                     Export
                   </button>
-                  <button 
+                  <button
                     className="btn btn-primary"
                     style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}
-                    onClick={() => {
-                      onLoad(circuit)
-                      onClose()
-                    }}
+                    onClick={() => { onLoad(circuit); onClose() }}
                   >
                     Load
                   </button>
-                  <button 
+                  <button
                     className="btn btn-clear"
                     style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}
                     onClick={() => handleDelete(circuit.id)}
@@ -108,9 +116,7 @@ function LoadCircuitModal({ onLoad, onClose }) {
         </div>
 
         <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
-            Close
-          </button>
+          <button className="btn btn-secondary" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
