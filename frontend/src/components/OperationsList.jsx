@@ -4,20 +4,22 @@ import { simulateCircuit } from '../utils/api'
 function OperationsList({ operations, onRemove, onReorder, onClear, onSimulate, numQubits, initialState }) {
   const [draggedIndex, setDraggedIndex] = useState(null)
   const [isSimulating, setIsSimulating] = useState(false)
+  const [error, setError] = useState(null)
 
   const handleSimulate = async () => {
     if (operations.length === 0) {
-      alert('Add some gates first!')
+      setError('Add some gates first!')
       return
     }
 
     setIsSimulating(true)
+    setError(null)
     try {
       const data = await simulateCircuit(numQubits, operations, initialState)
       onSimulate(data)
-    } catch (error) {
-      alert('Failed to connect to backend. Make sure the Python server is running.')
-      console.error(error)
+    } catch (err) {
+      setError('Could not connect to the backend. Make sure the Python server is running.')
+      console.error(err)
     } finally {
       setIsSimulating(false)
     }
@@ -66,6 +68,13 @@ function OperationsList({ operations, onRemove, onReorder, onClear, onSimulate, 
           ))
         )}
       </div>
+      {error && (
+        <div className="simulate-error">
+          <span className="simulate-error-icon">⚠</span>
+          <span>{error}</span>
+          <button className="simulate-error-close" onClick={() => setError(null)}>×</button>
+        </div>
+      )}
       <button 
         className="btn btn-primary btn-block" 
         onClick={handleSimulate}
