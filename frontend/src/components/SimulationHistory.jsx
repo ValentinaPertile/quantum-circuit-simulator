@@ -105,7 +105,6 @@ function HistoryItem({ item, formatDate }) {
     <div className="sim-history-item">
       <div className="sim-history-item-meta">
         <span className="sim-history-date">{formatDate(item.timestamp)}</span>
-        <span className="sim-history-badge">{item.numQubits}q · {item.operations.length} gates</span>
       </div>
 
       <div className="sim-history-notation">
