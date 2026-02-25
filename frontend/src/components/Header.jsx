@@ -45,7 +45,7 @@ function Header({ theme, onToggleTheme, onBackToHome }) {
     <header className="header">
       <div className="header-title">
         <h1>Quantum Circuit Simulator</h1>
-        <div className="header-subtitle">Build and simulate quantum circuits</div>
+
       </div>
 
       <div className="header-menu" ref={menuRef}>
