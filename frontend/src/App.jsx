@@ -12,16 +12,23 @@ import StepByStep from './components/StepByStep'
 import BlochSphere from './components/BlochSphere.jsx'
 import SaveCircuitModal from './components/SaveCircuitModal'
 import LoadCircuitModal from './components/LoadCircuitModal'
+import { ToastProvider, useToast } from './components/Toast'
 import ConfirmDialog from './components/ConfirmDialog'
 import { saveCircuit, importCircuit } from './utils/circuitStorage'
+import { encodeCircuitToURL, decodeCircuitFromURL, copyToClipboard } from './utils/circuitURL'
 import './App.css'
 
-function App() {
-  const [showLanding, setShowLanding] = useState(true)
+function AppInner() {
+  const showToast = useToast()
+
+  // Check URL for shared circuit before setting initial state
+  const urlCircuit = decodeCircuitFromURL()
+
+  const [showLanding, setShowLanding] = useState(!urlCircuit)
   const [activeTab, setActiveTab] = useState('circuit')
-  const [numQubits, setNumQubits] = useState(2)
-  const [initialState, setInitialState] = useState('00')
-  const [operations, setOperations] = useState([])
+  const [numQubits, setNumQubits] = useState(urlCircuit ? urlCircuit.numQubits : 2)
+  const [initialState, setInitialState] = useState(urlCircuit ? urlCircuit.initialState : '00')
+  const [operations, setOperations] = useState(urlCircuit ? urlCircuit.operations : [])
   const [results, setResults] = useState(null)
   const [theme, setTheme] = useState('light')
   
@@ -38,6 +45,11 @@ function App() {
     const savedTheme = localStorage.getItem('theme') || 'light'
     setTheme(savedTheme)
     document.documentElement.setAttribute('data-theme', savedTheme)
+    if (urlCircuit) {
+      showToast(`Circuit loaded from shared link!`, 'success')
+      // Clean URL without reloading
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
 
   // Keyboard shortcuts for undo/redo
@@ -170,19 +182,17 @@ function App() {
 
   const handleSaveCircuit = (circuitName) => {
     if (operations.length === 0) {
-      alert('Cannot save empty circuit')
+      showToast('Cannot save an empty circuit', 'error')
       return
     }
-
     const circuit = {
       name: circuitName,
-      numQubits: numQubits,
-      initialState: initialState,
-      operations: operations
+      numQubits,
+      initialState,
+      operations
     }
-
     saveCircuit(circuit)
-    alert(`Circuit "${circuitName}" saved successfully!`)
+    showToast(`Circuit "${circuitName}" saved!`, 'success')
   }
 
   const handleLoadCircuit = (circuit) => {
@@ -191,30 +201,26 @@ function App() {
     setOperations(circuit.operations)
     setResults(null)
     saveToHistory(circuit.operations)
-    alert(`Circuit "${circuit.name}" loaded successfully!`)
+    showToast(`Circuit "${circuit.name}" loaded!`, 'success')
   }
 
   const handleImportCircuit = async (event) => {
     const file = event.target.files[0]
     if (!file) return
-
     try {
       const circuit = await importCircuit(file)
-      
       if (!circuit.numQubits || !circuit.operations) {
         throw new Error('Invalid circuit file format')
       }
-
       setNumQubits(circuit.numQubits)
       setInitialState(circuit.initialState || '0'.repeat(circuit.numQubits))
       setOperations(circuit.operations)
       setResults(null)
       saveToHistory(circuit.operations)
-      alert('Circuit imported successfully!')
+      showToast('Circuit imported successfully!', 'success')
     } catch (error) {
-      alert(`Failed to import circuit: ${error.message}`)
+      showToast(`Failed to import: ${error.message}`, 'error')
     }
-
     event.target.value = ''
   }
 
@@ -285,6 +291,20 @@ function App() {
               style={{ display: 'none' }}
             />
           </label>
+          <button
+            className="btn btn-secondary"
+            onClick={async () => {
+              if (operations.length === 0) {
+                showToast('Add some gates first!', 'error')
+                return
+              }
+              const url = encodeCircuitToURL(numQubits, operations, initialState)
+              await copyToClipboard(url)
+              showToast('Link copied to clipboard!', 'success')
+            }}
+          >
+            Share
+          </button>
           <SimulationHistory />
           
           {/* Undo/Redo buttons */}
@@ -341,6 +361,7 @@ function App() {
               }}
               numQubits={numQubits}
               initialState={initialState}
+              showToast={showToast}
             />
           </div>
 
@@ -382,6 +403,7 @@ function App() {
         <SaveCircuitModal 
           onSave={handleSaveCircuit}
           onClose={() => setShowSaveModal(false)}
+          showToast={showToast}
         />
       )}
 
@@ -389,6 +411,7 @@ function App() {
         <LoadCircuitModal 
           onLoad={handleLoadCircuit}
           onClose={() => setShowLoadModal(false)}
+          showToast={showToast}
         />
       )}
 
@@ -400,6 +423,14 @@ function App() {
         />
       )}
     </div>
+  )
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <AppInner />
+    </ToastProvider>
   )
 }
 

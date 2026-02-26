@@ -351,6 +351,7 @@ body {
 .header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     margin-bottom: 1.5rem;
     padding: 1.2rem 1.5rem;
     background: var(--white);
@@ -358,28 +359,11 @@ body {
     border: 2px solid var(--beige-300);
 }
 
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-    min-width: 0;
-}
-
 .header-title h1 {
     font-size: 1.6rem;
     font-weight: 400;
     color: var(--moss-green);
     letter-spacing: -0.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.header-subtitle {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-style: italic;
 }
 
 .header-controls {
@@ -395,11 +379,7 @@ body {
     }
 
     .header-title h1 {
-        font-size: 1.2rem;
-    }
-
-    .header-subtitle {
-        font-size: 0.75rem;
+        font-size: 1.15rem;
     }
 }
 
@@ -2576,11 +2556,6 @@ body {
     background: var(--white);
 }
 
-.menu-container {
-    margin-left: auto;
-    position: relative; /* importante para el dropdown */
-}
-
 .hamburger-line {
     display: block;
     width: 18px;
@@ -2803,12 +2778,15 @@ body {
     background: var(--beige-300);
 }
 
-/* Mobile: dropdown takes more width */
+/* Mobile: dropdown alineado a la derecha, no se sale de pantalla */
 @media (max-width: 768px) {
     .menu-dropdown {
-        right: 0;
-        min-width: 280px;
-        max-width: calc(100vw - 1.5rem);
+        position: fixed;
+        top: auto;
+        right: 1rem;
+        left: auto;
+        min-width: 220px;
+        max-width: calc(100vw - 2rem);
     }
 
     .history-panel {
